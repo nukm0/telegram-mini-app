@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAPE Market - Telegram Mini App</title>
+    <style>
+        /* ОСНОВНЫЕ СТИЛИ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 100%;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* ШАПКА */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-info button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* КАТЕГОРИИ */
+        .categories {
+            margin: 20px 0;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .category-card {
+            background: #f8f9fa;
+            padding: 15px 8px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid #e9ecef;
+        }
+        
+        .category-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        /* ОБЪЯВЛЕНИЯ */
+        .ads-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .ad-card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+        
+        .ad-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .ad-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .ad-price {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 8px 0;
+        }
+        
+        /* КНОПКИ */
+        .add-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(40,167,69,0.3);
+            z-index: 1000;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .bottom-nav button {
+            background: none;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #667eea;
+            border-radius: 8px;
+        }
+        
+        .bottom-nav button:hover {
+            background: #f8f9fa;
+        }
+        
+        /* МОДАЛЬНОЕ ОКНО */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        /* ФОРМЫ */
+        .form-group {
+            margin: 12px 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        /* ФОТО */
+        .photo-section {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .photo-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+            min-height: 80px;
+        }
+        
+        .photo-item {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        
+        .upload-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .photo-counter {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ШАПКА -->
+        <header class="header">
+            <h1 style="font-size: 20px;">🚀 VAPE Market</h1>
+            <div class="user-info">
+                <span id="userName">Гость</span>
+                <button onclick="openProfile()">👤</button>
+            </div>
+        </header>
+
+        <!-- КАТЕГОРИИ -->
+        <div class="categories">
+            <h2 style="font-size: 18px;">Категории товаров</h2>
+            <div class="category-grid">
+                <div class="category-card" onclick="showCategory('liquids')">
+                    <div class="category-icon">💧</div>
+                    <h3 style="font-size: 14px;">Жидкости</h3>
+                </div>
+                <div class="category-card" onclick="showCategory('consumables')">
+                    <div class="category-icon">🔧</div>
+                    <h3 style="font-size: 14px;">Расходники</h3>
+                </div>
+                <div class="category-card" onclick="showCategory('disposables')">
+                    <div class="category-icon">📱</div>
+                    <h3 style="font-size: 14px;">Одноразовые</h3>
+                </div>
+                <div class="category-card" onclick="showCategory('pod-systems')">
+                    <div class="category-icon">⚡</div>
+                    <h3 style="font-size: 14px;">Под-системы</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- ОБЪЯВЛЕНИЯ -->
+        <div class="ads-section">
+            <h2 style="font-size: 18px;">Последние объявления</h2>
+            <div id="adsContainer" class="ads-grid">
+                <!-- Здесь появятся объявления -->
+                <div class="ad-card">
+                    <img src="https://via.placeholder.com/300x150/667eea/fff?text=VAPE+Пример" class="ad-image">
+                    <div class="ad-title">Жидкость Berry Mix</div>
+                    <div style="color: #666; font-size: 14px; margin: 5px 0;">Вкусная ягодная смесь 50мг</div>
+                    <div class="ad-price">1500 руб.</div>
+                    <div style="color: #888; font-size: 12px;">Продавец: @vape_seller</div>
+                    <button class="submit-btn" style="margin-top: 10px;" onclick="contactSeller(123, 'vape_seller')">💬 Написать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- КНОПКА ДОБАВЛЕНИЯ -->
+        <button class="add-btn" onclick="openAddForm()">+ Добавить объявление</button>
+
+        <!-- ПАНЕЛЬ НАВИГАЦИИ -->
+        <nav class="bottom-nav">
+            <button onclick="showHome()">🏠 Главная</button>
+            <button onclick="showMyAds()">📋 Мои</button>
+            <button onclick="showChats()">💬 Чат</button>
+        </nav>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+    
+    <!-- СКРЫТЫЙ INPUT ДЛЯ ФОТО -->
+    <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+
+    <script>
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+        let tg = window.Telegram?.WebApp || {};
+        let selectedPhotos = [];
+        let ads = [
+            {
+                id: 1,
+                userId: 123,
+                username: "vape_seller",
+                category: "liquids",
+                title: "Жидкость Berry Mix 50мг",
+                description: "Вкусная ягодная смесь, крепость 50мг, 30мл",
+                price: 1500,
+                photos: ["https://via.placeholder.com/300x150/667eea/fff?text=VAPE+Пример"],
+                date: "2024-01-15"
+            }
+        ];
+        
+        let user = {
+            id: Math.floor(Math.random() * 10000),
+            username: "user_" + Math.floor(Math.random() * 1000)
+        };
+        
+        // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
+        
+        // При загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Приложение загружено!");
+            document.getElementById('userName').textContent = user.username;
+            loadAds();
+        });
+        
+        // Загрузить объявления
+        function loadAds() {
+            const container = document.getElementById('adsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            ads.forEach(ad => {
+                const adHTML = `
+                    <div class="ad-card">
+                        ${ad.photos && ad.photos.length > 0 ? 
+                            `<img src="${ad.photos[0]}" class="ad-image" alt="${ad.title}">` : 
+                            `<div style="height:150px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;">Нет фото</div>`
+                        }
+                        <div class="ad-title">${ad.title}</div>
+                        <div style="color:#666; font-size:14px; margin:5px 0;">${ad.description}</div>
+                        <div class="ad-price">${ad.price} руб.</div>
+                        <div style="color:#888; font-size:12px;">Продавец: @${ad.username}</div>
+                        <button class="submit-btn" style="margin-top:10px;" onclick="contactSeller(${ad.userId}, '${ad.username}')">
+                            💬 Написать продавцу
+                        </button>
+                        ${ad.userId === user.id ? `
+                            <button class="submit-btn" style="background:#dc3545; margin-top:5px;" onclick="deleteAd(${ad.id})">
+                                ❌ Удалить
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                container.innerHTML += adHTML;
+            });
+        }
+        
+        // Показать категорию
+        function showCategory(category) {
+            const names = {
+                liquids: 'Жидкости',
+                consumables: 'Расходники',
+                disposables: 'Одноразовые',
+                'pod-systems': 'Под-системы'
+            };
+            
+            openModal(`
+                <h2>${names[category]}</h2>
+                <p>Вы выбрали категорию: <strong>${names[category]}</strong></p>
+                <p>Здесь будут товары этой категории.</p>
+                <button class="submit-btn" onclick="openAddForm('${category}')">
+                    + Добавить в "${names[category]}"
+                </button>
+            `);
+        }
+        
+        // Открыть форму добавления
+        function openAddForm(category = '') {
+            selectedPhotos = [];
+            
+            const formHTML = `
+                <h2>📤 Добавить объявление</h2>
+                <form id="addForm" onsubmit="event.preventDefault(); addNewAd();">
+                    <div class="form-group">
+                        <label>Категория:</label>
+                        <select id="category" required>
+                            <option value="">Выберите категорию</option>
+                            <option value="liquids" ${category === 'liquids' ? 'selected' : ''}>Жидкости</option>
+                            <option value="consumables" ${category === 'consumables' ? 'selected' : ''}>Расходники</option>
+                            <option value="disposables" ${category === 'disposables' ? 'selected' : ''}>Одноразовые</option>
+                            <option value="pod-systems" ${category === 'pod-systems' ? 'selected' : ''}>Под-системы</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Название товара:</label>
+                        <input type="text" id="title" required placeholder="Например: Жидкость Berry Mix">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Описание:</label>
+                        <textarea id="description" required placeholder="Опишите товар..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Цена (руб.):</label>
+                        <input type="number" id="price" required min="1" placeholder="1500">
+                    </div>
+                    
+                    <!-- СЕКЦИЯ ФОТО -->
+                    <div class="photo-section">
+                        <label>Фотографии (макс. 3):</label>
+                        <div class="photo-preview" id="photoPreview"></div>
+                        
+                        <button type="button" class="upload-btn" onclick="addPhoto()" id="addPhotoBtn">
+                            📸 Добавить фото
+                        </button>
+                        
+                        <div class="photo-counter" id="photoCounter">0/3 фото</div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">✅ Опубликовать</button>
+                </form>
+            `;
+            
+            openModal(formHTML);
+            updatePhotoPreview();
+        }
+        
+        // Добавить фото
+        function addPhoto() {
+            if (selectedPhotos.length >= 3) {
+                alert('Максимум 3 фото!');
+                return;
+            }
+            
+            // В реальном Telegram: tg.showPhotoPicker()
+            // Для теста - создаем тестовое фото
+            const newPhoto = {
+                id: Date.now(),
+                url: `https://via.placeholder.com/200x150/667eea/fff?text=Фото+${selectedPhotos.length + 1}`,
+                name: `photo_${selectedPhotos.length + 1}.jpg`
+            };
+            
+            selectedPhotos.push(newPhoto);
+            updatePhotoPreview();
+            
+            // Обновляем кнопку
+            const btn = document.getElementById('addPhotoBtn');
+            if (btn && selectedPhotos.length >= 3) {
+                btn.disabled = true;
+                btn.style.background = '#ccc';
+            }
+        }
+        
+        // Обновить превью фото
+        function updatePhotoPreview() {
+            const preview = document.getElementById('photoPreview');
+            const counter = document.getElementById('photoCounter');
+            
+            if (!preview || !counter) return;
+            
+            preview.innerHTML = '';
+            
+            selectedPhotos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = `
+                    <img src="${photo.url}" alt="Фото">
+                    <button class="remove-photo" onclick="removePhoto(${index})">×</button>
+                `;
+                preview.appendChild(div);
+            });
+            
+            counter.textContent = `${selectedPhotos.length}/3 фото`;
+        }
+        
+        // Удалить фото
+        function removePhoto(index) {
+            selectedPhotos.splice(index, 1);
+            updatePhotoPreview();
+            
+            // Включаем кнопку если стало меньше 3 фото
+            const btn = document.getElementById('addPhotoBtn');
+            if (btn && selectedPhotos.length < 3) {
+                btn.disabled = false;
+                btn.style.background = '#28a745';
+            }
+        }
+        
+        // Добавить новое объявление
+        function addNewAd() {
+            const category = document.getElementById('category')?.value;
+            const title = document.getElementById('title')?.value;
+            const description = document.getElementById('description')?.value;
+            const price = document.getElementById('price')?.value;
+            
+            if (!category || !title || !description || !price) {
+                alert('Заполните все поля!');
+                return;
+            }
+            
+            const newAd = {
+                id: Date.now(),
+                userId: user.id,
+                username: user.username,
+                category: category,
+                title: title,
+                description: description,
+                price: parseInt(price),
+                photos: selectedPhotos.length > 0 
+                    ? selectedPhotos.map(p => p.url) 
+                    : ['https://via.placeholder.com/300x150/ccc/fff?text=Нет+фото'],
+                date: new Date().toLocaleDateString('ru-RU')
+            };
+            
+            ads.unshift(newAd); // Добавляем в начало
+            closeModal();
+            loadAds();
+            alert('✅ Объявление добавлено!');
+        }
+        
+        // Удалить объявление
+        function deleteAd(adId) {
+            if (confirm('Удалить это объявление?')) {
+                ads = ads.filter(ad => ad.id !== adId);
+                loadAds();
+            }
+        }
+        
+        // Связаться с продавцом
+        function contactSeller(sellerId, sellerUsername) {
+            openModal(`
+                <h2>💬 Написать продавцу</h2>
+                <p>Продавец: <strong>@${sellerUsername}</strong></p>
+                <p>Нажмите кнопку, чтобы написать в Telegram:</p>
+                <button class="submit-btn" onclick="sendMessage(${sellerId}, '${sellerUsername}')">
+                    📨 Открыть Telegram
+                </button>
+            `);
+        }
+        
+        // Отправить сообщение
+        function sendMessage(userId, username) {
+            alert(`Откроется чат с @${username}\n\nВ реальном приложении вы перейдете в Telegram.`);
+            closeModal();
+        }
+        
+        // Открыть профиль
+        function openProfile() {
+            openModal(`
+                <h2>👤 Мой профиль</h2>
+                <p><strong>Имя:</strong> @${user.username}</p>
+                <p><strong>ID:</strong> ${user.id}</p>
+                <p><strong>Мои объявления:</strong> ${ads.filter(ad => ad.userId === user.id).length}</p>
+                <button class="submit-btn" onclick="showMyAds()">📋 Мои объявления</button>
+            `);
+        }
+        
+        // Показать мои объявления
+        function showMyAds() {
+            const myAds = ads.filter(ad => ad.userId === user.id);
+            
+            if (myAds.length === 0) {
+                openModal(`
+                    <h2>📋 Мои объявления</h2>
+                    <p>У вас пока нет объявлений.</p>
+                    <button class="submit-btn" onclick="openAddForm()">+ Добавить первое</button>
+                `);
+                return;
+            }
+            
+            let html = '<h2>📋 Мои объявления</h2>';
+            myAds.forEach(ad => {
+                html += `
+                    <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:8px;">
+                        <strong>${ad.title}</strong><br>
+                        Цена: ${ad.price} руб.<br>
+                        <button class="submit-btn" style="background:#dc3545; margin-top:5px;" 
+                                onclick="deleteAd(${ad.id})">❌ Удалить</button>
+                    </div>
+                `;
+            });
+            
+            html += `<button class="submit-btn" onclick="openAddForm()">+ Добавить новое</button>`;
+            openModal(html);
+        }
+        
+        // Навигация
+        function showHome() {
+            window.scrollTo(0, 0);
+        }
+        
+        function showChats() {
+            openModal(`
+                <h2>💬 Сообщения</h2>
+                <p>Здесь будут ваши переписки.</p>
+                <p>В разработке...</p>
+            `);
+        }
+        
+        // ========== УТИЛИТЫ ==========
+        
+        // Открыть модальное окно
+        function openModal(content) {
+            const modal = document.getElementById('modal');
+            const modalBody = document.getElementById('modalBody');
+            
+            if (modal && modalBody) {
+                modalBody.innerHTML = content;
+                modal.style.display = 'block';
+            } else {
+                alert('Ошибка: модальное окно не найдено');
+            }
+        }
+        
+        // Закрыть модальное окно
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Закрыть по клику вне окна
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>
