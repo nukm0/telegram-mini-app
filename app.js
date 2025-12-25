@@ -1,5 +1,60 @@
 // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ==========
+// ВРЕМЕННЫЙ КОД ДЛЯ ПРОВЕРКИ - УДАЛИТЕ ПОТОМ
+console.log('=== НАЧАЛО ПРОВЕРКИ ===');
 
+// Проверяем подключение Supabase
+if (!window.supabase) {
+  console.error('❌ ОШИБКА: Библиотека Supabase не подключена!');
+  console.log('Проверьте строку в index.html:');
+  console.log('<script src="https://unpkg.com/@supabase/supabase-js@2"></script>');
+}
+
+if (!window.supabaseClient) {
+  console.error('❌ ОШИБКА: supabaseClient не создан!');
+  console.log('Проверьте файл supabase.js');
+}
+
+// Показываем тестовое объявление если база не работает
+setTimeout(() => {
+  const container = document.getElementById('adsContainer');
+  if (container && container.innerHTML.includes('Загружаем')) {
+    console.log('⚠️ Supabase не ответил за 3 секунды, показываем тестовые данные');
+    container.innerHTML = `
+      <div class="ad-card">
+        <div class="ad-title">🛠️ Тестовое объявление</div>
+        <div style="color:#666;">Это тестовое объявление, потому что база данных не настроена</div>
+        <div class="ad-price">1000 руб.</div>
+        <div style="color:#888;">Продавец: @test_user</div>
+        <button class="submit-btn">💬 Написать</button>
+      </div>
+      <div style="text-align:center; padding:20px; color:#dc3545;">
+        <strong>Внимание:</strong> База данных не настроена!<br>
+        <button onclick="setupSupabaseHelp()" style="margin-top:10px; background:#28a745; color:white; border:none; padding:10px; border-radius:5px;">
+          Как настроить Supabase?
+        </button>
+      </div>
+    `;
+  }
+}, 3000);
+
+function setupSupabaseHelp() {
+  openModal(`
+    <h2>⚙️ Настройка базы данных</h2>
+    <ol style="text-align:left;">
+      <li>Зайдите на <a href="https://supabase.com" target="_blank">supabase.com</a></li>
+      <li>Создайте аккаунт (бесплатно)</li>
+      <li>Создайте проект</li>
+      <li>В настройках проекта (Project Settings → API) скопируйте:
+        <ul>
+          <li><strong>Project URL</strong></li>
+          <li><strong>anon public key</strong></li>
+        </ul>
+      </li>
+      <li>Вставьте их в файл <code>supabase.js</code></li>
+    </ol>
+  `);
+}
+// === КОНЕЦ ВРЕМЕННОГО КОДА ===
 // Текущий пользователь (временные данные)
 let currentUser = {
     id: Math.floor(Math.random() * 1000000),
