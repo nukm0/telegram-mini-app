@@ -3,329 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAPE Market - Telegram Mini App</title>
-    
-    <!-- Стили нашего приложения -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Иконки для кнопок (Font Awesome) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Подключаем Telegram Web App SDK (для работы в Telegram) -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- ПОДКЛЮЧАЕМ БИБЛИОТЕКУ SUPABASE (ВАЖНО!) -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- Наши скрипты -->
-    <script src="supabase.js"></script> <!-- Файл с настройками базы данных -->
-    <script src="app.js" defer></script> <!-- Основная логика приложения -->
-    
+    <title>Маркетплейс для вейпинга</title>
     <style>
-        /* Дополнительные стили для фото и улучшения */
-        .photo-section {
-            margin: 15px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 2px dashed #dee2e6;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
         
-        .photo-preview {
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #4a00e0, #8e2de2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .categories {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin: 10px 0;
-            min-height: 100px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
         }
         
-        .photo-item {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .remove-photo {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid #8e2de2;
+            border-radius: 25px;
+            background: white;
+            color: #8e2de2;
+            font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.3s;
         }
         
-        .upload-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #28a745;
+        .category-btn:hover {
+            background: #8e2de2;
             color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-top: 10px;
         }
         
-        .upload-btn:hover {
-            background: #218838;
+        .category-btn.active {
+            background: #8e2de2;
+            color: white;
         }
         
-        .upload-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 30px;
         }
         
-        .photo-counter {
-            font-size: 14px;
-            color: #666;
-            margin-top: 8px;
+        .product-card {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+            background: white;
         }
         
-        .photo-counter.warning {
-            color: #e74c3c;
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #8e2de2;
+        }
+        
+        .product-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 10px;
             font-weight: bold;
         }
         
-        .ad-photos-carousel {
-            position: relative;
-            margin-bottom: 10px;
+        .product-category {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .product-price {
+            font-size: 1.8rem;
+            color: #8e2de2;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .product-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        #error-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.1rem;
+            background: #ffe6e6;
+            color: #d63031;
+            margin: 20px;
             border-radius: 10px;
-            overflow: hidden;
-            height: 180px;
-        }
-        
-        .carousel-slide {
-            display: none;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .carousel-slide.active {
-            display: block;
-        }
-        
-        .carousel-dots {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .carousel-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-        }
-        
-        .carousel-dot.active {
-            background: white;
+            border-left: 5px solid #d63031;
         }
         
         .loading {
             text-align: center;
-            padding: 30px;
+            padding: 40px;
+            font-size: 1.2rem;
             color: #666;
         }
         
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            border-top: 2px solid #e9ecef;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #8e2de2;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .add-btn:hover {
+            transform: scale(1.1);
+            background: #4a00e0;
         }
     </style>
 </head>
 <body>
-    <!-- Основной контейнер приложения -->
     <div class="container">
-        <!-- Шапка с названием и профилем -->
-        <header class="header">
-            <h1><i class="fas fa-smoking"></i> VAPE Market</h1>
-            <div class="user-info">
-                <span id="userName"><i class="fas fa-user"></i> Загрузка...</span>
-                <button onclick="openProfile()"><i class="fas fa-cog"></i> Профиль</button>
-            </div>
+        <header>
+            <h1>🎮 Мини-апп Маркет</h1>
+            <p class="subtitle">Покупай и продавай устройства для вейпинга</p>
         </header>
-
-        <!-- Блок категорий товаров -->
+        
         <div class="categories">
-            <h2><i class="fas fa-list"></i> Категории товаров</h2>
-            <div class="category-grid">
-                <!-- Категория 1 -->
-                <div class="category-card" onclick="showCategory('liquids')">
-                    <div class="category-icon"><i class="fas fa-tint"></i></div>
-                    <h3>Жидкости</h3>
-                    <p style="font-size:12px; color:#666;">Соки, соли</p>
-                </div>
-                
-                <!-- Категория 2 -->
-                <div class="category-card" onclick="showCategory('consumables')">
-                    <div class="category-icon"><i class="fas fa-tools"></i></div>
-                    <h3>Расходники</h3>
-                    <p style="font-size:12px; color:#666;">Испарители</p>
-                </div>
-                
-                <!-- Категория 3 -->
-                <div class="category-card" onclick="showCategory('disposables')">
-                    <div class="category-icon"><i class="fas fa-mobile-alt"></i></div>
-                    <h3>Одноразовые</h3>
-                    <p style="font-size:12px; color:#666;">Pod-системы</p>
-                </div>
-                
-                <!-- Категория 4 -->
-                <div class="category-card" onclick="showCategory('pod-systems')">
-                    <div class="category-icon"><i class="fas fa-bolt"></i></div>
-                    <h3>Устройства</h3>
-                    <p style="font-size:12px; color:#666;">Моды, боксы</p>
-                </div>
-                
-                <!-- Категория 5 -->
-                <div class="category-card" onclick="showCategory('others')">
-                    <div class="category-icon"><i class="fas fa-box"></i></div>
-                    <h3>Другое</h3>
-                    <p style="font-size:12px; color:#666;">Аксессуары</p>
-                </div>
-            </div>
+            <button class="category-btn active" data-category="Все">Все товары</button>
+            <button class="category-btn" data-category="Устройства">Устройства</button>
+            <button class="category-btn" data-category="Жидкости">Жидкости</button>
+            <button class="category-btn" data-category="Pod-системы">Pod-системы</button>
+            <button class="category-btn" data-category="Расходники">Расходники</button>
         </div>
-
-        <!-- Блок с объявлениями -->
-        <div class="ads-section">
-            <h2><i class="fas fa-fire"></i> Последние объявления</h2>
-            <div id="adsContainer" class="ads-grid">
-                <!-- Сюда JavaScript загрузит объявления из базы данных -->
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>Загрузка объявлений...</p>
-                </div>
-            </div>
+        
+        <!-- Блок для ошибок -->
+        <div id="error-message" style="display: none;"></div>
+        
+        <!-- Товары будут здесь -->
+        <div class="products-grid" id="products-container">
+            <div class="loading">Загрузка товаров...</div>
         </div>
-
-        <!-- Кнопка добавления нового объявления (плавающая) -->
-        <button class="add-btn" onclick="openAddForm()">
-            <i class="fas fa-plus-circle"></i> Добавить объявление
-        </button>
-
-        <!-- Нижняя панель навигации -->
-        <nav class="bottom-nav">
-            <button onclick="showHome()"><i class="fas fa-home"></i> Главная</button>
-            <button onclick="showMyAds()"><i class="fas fa-clipboard-list"></i> Мои</button>
-            <button onclick="showChats()"><i class="fas fa-comments"></i> Чат</button>
-            <button onclick="refreshApp()"><i class="fas fa-sync-alt"></i> Обновить</button>
-        </nav>
-    </div>
-
-    <!-- Модальное окно (всплывающее окно для форм) -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <div id="modalBody">
-                <!-- Сюда подгружается содержимое: формы, информация и т.д. -->
-            </div>
-        </div>
+        
+        <footer>
+            <p>© 2024 Мини-апп Маркет. Все права защищены.</p>
+            <p>Товары добавляются пользователями</p>
+        </footer>
     </div>
     
-    <!-- Скрытый input для загрузки фото (используется в браузере) -->
-    <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
-    
-    <!-- Сообщение об ошибке подключения (показывается при проблемах) -->
-    <div id="errorMessage" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#dc3545; color:white; padding:15px; border-radius:10px; z-index:3000; box-shadow:0 5px 15px rgba(0,0,0,0.2);">
-        <i class="fas fa-exclamation-triangle"></i> Ошибка подключения к базе. Проверьте настройки Supabase.
-    </div>
+    <button class="add-btn" id="add-product-btn">+</button>
+
+    <!-- Подключаем Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <script>
-        // Простая функция обновления страницы
-        function refreshApp() {
-            window.location.reload();
+        // Твои данные Supabase
+        const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co'
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4'
+        
+        // Создаём клиент Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+        
+        // Все товары и отфильтрованные
+        let allProducts = []
+        let filteredProducts = []
+        
+        // Загружаем товары из базы
+        async function loadProducts() {
+            const errorElement = document.getElementById('error-message')
+            const container = document.getElementById('products-container')
+            
+            try {
+                const { data, error } = await supabase
+                    .from('mini_app_market')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                
+                if (error) {
+                    throw error
+                }
+                
+                allProducts = data
+                filteredProducts = [...allProducts]
+                
+                // Показываем товары
+                renderProducts(filteredProducts)
+                
+                // Скрываем сообщение об ошибке
+                errorElement.style.display = 'none'
+                
+                console.log('✅ Загружено товаров:', data.length)
+                
+            } catch (error) {
+                // Показываем ошибку
+                errorElement.textContent = `❌ Ошибка загрузки: ${error.message}`
+                errorElement.style.display = 'block'
+                
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        Не удалось загрузить товары. Проверьте подключение.
+                    </div>
+                `
+                
+                console.error('Ошибка загрузки:', error)
+            }
         }
         
-        // Показываем ошибку, если проблемы с загрузкой
-        setTimeout(() => {
-            if (document.querySelector('.loading')) {
-                document.getElementById('errorMessage').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('errorMessage').style.display = 'none';
-                }, 5000);
+        // Отрисовываем товары
+        function renderProducts(products) {
+            const container = document.getElementById('products-container')
+            
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666; grid-column: 1/-1;">
+                        Товары не найдены
+                    </div>
+                `
+                return
             }
-        }, 10000);
+            
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-title">${product.title}</div>
+                    <div class="product-category">${product.category}</div>
+                    <div class="product-price">${product.price} ₽</div>
+                    <div class="product-description">${product.description || 'Описание отсутствует'}</div>
+                    <div style="color: #999; font-size: 0.9rem;">
+                        Добавлено: ${new Date(product.created_at).toLocaleDateString('ru-RU')}
+                    </div>
+                </div>
+            `).join('')
+        }
+        
+        // Фильтрация по категориям
+        function setupCategoryFilters() {
+            const buttons = document.querySelectorAll('.category-btn')
+            
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Убираем активный класс у всех кнопок
+                    buttons.forEach(b => b.classList.remove('active'))
+                    // Добавляем активный класс нажатой кнопке
+                    btn.classList.add('active')
+                    
+                    const category = btn.dataset.category
+                    
+                    if (category === 'Все') {
+                        filteredProducts = [...allProducts]
+                    } else {
+                        filteredProducts = allProducts.filter(
+                            product => product.category === category
+                        )
+                    }
+                    
+                    renderProducts(filteredProducts)
+                })
+            })
+        }
+        
+        // Кнопка добавления товара
+        function setupAddButton() {
+            document.getElementById('add-product-btn').addEventListener('click', () => {
+                const newProduct = {
+                    title: prompt('Название товара:'),
+                    category: prompt('Категория (Устройства/Жидкости/Pod-системы/Расходники):'),
+                    price: parseInt(prompt('Цена (₽):')),
+                    description: prompt('Описание:')
+                }
+                
+                if (newProduct.title && newProduct.category && newProduct.price) {
+                    addProduct(newProduct)
+                } else {
+                    alert('Заполните все обязательные поля!')
+                }
+            })
+        }
+        
+        // Добавление товара в базу
+        async function addProduct(product) {
+            try {
+                const { error } = await supabase
+                    .from('mini_app_market')
+                    .insert([product])
+                
+                if (error) throw error
+                
+                alert('✅ Товар добавлен!')
+                loadProducts() // Перезагружаем список
+                
+            } catch (error) {
+                alert(`❌ Ошибка: ${error.message}`)
+                console.error('Ошибка добавления:', error)
+            }
+        }
+        
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts()
+            setupCategoryFilters()
+            setupAddButton()
+        })
     </script>
 </body>
 </html>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script>
-  // Твои данные Supabase
-  const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co'
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4'
-  
-  // Создаём клиент
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-  
-  // Функция загрузки товаров
-  async function loadProducts() {
-    const { data, error } = await supabase
-      .from('mini_app_market')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Ошибка загрузки:', error)
-      // Показываем ошибку в интерфейсе
-      document.getElementById('error-message').innerHTML = 
-        '❌ Не удалось загрузить товары: ' + error.message
-    } else {
-      console.log('Товары загружены:', data)
-      // Отрисовываем товары
-      renderProducts(data)
-    }
-  }
-  
-  // Функция отрисовки товаров (замени на свою)
-  function renderProducts(products) {
-    const container = document.getElementById('products-container') // или другой ID
-    if (!container) return
-    
-    container.innerHTML = products.map(product => `
-      <div class="product">
-        <h3>${product.title}</h3>
-        <p>Категория: ${product.category}</p>
-        <p>Цена: ${product.price} ₽</p>
-        <p>${product.description}</p>
-      </div>
-    `).join('')
-  }
-  
-  // Загружаем товары при загрузке страницы
-  document.addEventListener('DOMContentLoaded', loadProducts)
-</script>
