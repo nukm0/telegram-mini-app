@@ -283,3 +283,49 @@
     </script>
 </body>
 </html>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  // Твои данные Supabase
+  const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4'
+  
+  // Создаём клиент
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  
+  // Функция загрузки товаров
+  async function loadProducts() {
+    const { data, error } = await supabase
+      .from('mini_app_market')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Ошибка загрузки:', error)
+      // Показываем ошибку в интерфейсе
+      document.getElementById('error-message').innerHTML = 
+        '❌ Не удалось загрузить товары: ' + error.message
+    } else {
+      console.log('Товары загружены:', data)
+      // Отрисовываем товары
+      renderProducts(data)
+    }
+  }
+  
+  // Функция отрисовки товаров (замени на свою)
+  function renderProducts(products) {
+    const container = document.getElementById('products-container') // или другой ID
+    if (!container) return
+    
+    container.innerHTML = products.map(product => `
+      <div class="product">
+        <h3>${product.title}</h3>
+        <p>Категория: ${product.category}</p>
+        <p>Цена: ${product.price} ₽</p>
+        <p>${product.description}</p>
+      </div>
+    `).join('')
+  }
+  
+  // Загружаем товары при загрузке страницы
+  document.addEventListener('DOMContentLoaded', loadProducts)
+</script>
