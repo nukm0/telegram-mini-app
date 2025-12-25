@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co'; // ← ВАШ URL ЗДЕСЬ
-const SUPABASE_ANON_KEY = 'sb_publishable_GKuQlutuoP8MBcr19dlCSw_JSDqASMj'; // ← ВАШ КЛЮЧ ЗДЕСЬ
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4'; // ← ВАШ КЛЮЧ ЗДЕСЬ
 
 // ========== СОЗДАЕМ КЛИЕНТ ==========
 console.log('🔄 Подключаемся к Supabase...');
