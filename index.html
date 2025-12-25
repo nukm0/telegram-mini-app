@@ -4,358 +4,242 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VAPE MARKET</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial; }
-        
-        body { 
-            background: linear-gradient(135deg, #8A2BE2, #5D00A3); 
-            color: white; 
-            min-height: 100vh; 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        :root {
+            --primary: #8A2BE2;
+            --primary-dark: #5D00A3;
+            --bg-dark: #0A0A0F;
+            --bg-card: #1A1A24;
+            --text: #FFFFFF;
+            --text-secondary: #B0B0C0;
+            --success: #00CC88;
+            --danger: #FF3366;
         }
+        body { background: var(--bg-dark); color: var(--text); }
         
-        /* Плашка 18+ */
-        #ageGate {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, #8A2BE2, #5D00A3);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            text-align: center;
-            z-index: 1000;
+        .age-gate {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark); z-index: 1000;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
         }
+        .age-gate.hidden { display: none; }
+        .age-title { font-size: 28px; margin-bottom: 10px; color: var(--primary); }
+        .age-buttons { display: flex; gap: 15px; width: 100%; max-width: 300px; }
+        .age-btn { flex: 1; padding: 15px; border: none; border-radius: 15px; font-size: 16px; cursor: pointer; }
+        .age-yes { background: var(--success); color: white; }
+        .age-no { background: var(--danger); color: white; }
         
-        .age-icon { font-size: 60px; margin-bottom: 20px; }
-        .age-title { font-size: 28px; margin-bottom: 10px; font-weight: bold; }
-        .age-text { margin-bottom: 30px; opacity: 0.9; }
-        
-        .age-buttons {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 300px;
-        }
-        
-        .age-btn {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        #ageYes { background: #00CC88; color: white; }
-        #ageNo { background: #FF3366; color: white; }
-        
-        /* Основное приложение */
-        #appContainer {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            display: none;
-        }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg-dark); }
         
         .header {
-            text-align: center;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 20px 15px; text-align: center;
+            border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;
         }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
         
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
-        
-        /* Навигация */
         .nav-tabs {
-            display: flex;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            margin-bottom: 20px;
+            display: flex; background: var(--bg-card); margin: 15px;
+            border-radius: 15px; overflow: hidden;
         }
-        
         .nav-tab {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: white;
+            flex: 1; text-align: center; padding: 15px;
+            background: none; border: none; color: var(--text-secondary);
             cursor: pointer;
         }
+        .nav-tab.active { color: var(--text); background: rgba(138, 43, 226, 0.15); }
         
-        .nav-tab.active {
-            background: rgba(255,255,255,0.2);
-            border-radius: 15px;
-        }
-        
-        /* Категории */
+        .categories { padding: 15px; }
         .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-top: 15px;
         }
-        
         .category-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
+            background: var(--bg-card); border-radius: 12px;
+            padding: 15px; text-align: center; cursor: pointer;
         }
+        .category-card.active { background: rgba(138, 43, 226, 0.2); }
         
-        .category-card.active {
-            background: rgba(255,255,255,0.2);
-            border: 2px solid white;
+        .products-section { padding: 15px; }
+        .section-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 15px;
         }
-        
-        /* Товары */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-        
-        .product-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 15px;
-        }
-        
-        .product-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .product-price {
-            color: #00CC88;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        /* Кнопки */
         .add-product-btn {
-            background: white;
-            color: #8A2BE2;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white; border: none; border-radius: 50px;
+            padding: 10px 20px; cursor: pointer;
         }
         
-        .action-btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .buy-btn {
-            background: #00CC88;
-            color: white;
-        }
-        
-        /* Профиль */
-        .profile-header {
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .products-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
             gap: 15px;
+        }
+        .product-card {
+            background: var(--bg-card); border-radius: 15px;
+            overflow: hidden;
+        }
+        .product-image {
+            width: 100%; height: 150px;
+            background: linear-gradient(45deg, var(--primary-dark), var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: white;
+        }
+        .product-content { padding: 15px; }
+        .product-title { font-size: 16px; margin-bottom: 8px; }
+        .product-price { color: var(--success); font-size: 20px; margin-bottom: 10px; }
+        .product-actions { display: flex; gap: 10px; }
+        .action-btn {
+            flex: 1; padding: 8px; border-radius: 10px;
+            border: none; cursor: pointer;
+        }
+        .buy-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        .profile-section { padding: 15px; }
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 20px; padding: 25px; text-align: center;
             margin-bottom: 20px;
         }
-        
-        .stat-card {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
+        .user-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 3px solid white; margin: 0 auto 15px;
+            background: var(--bg-card); display: flex;
+            align-items: center; justify-content: center; font-size: 32px;
         }
         
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        /* Форма */
-        #addFormOverlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
+        .form-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.95); z-index: 1001;
+            display: none; align-items: center; justify-content: center;
             padding: 20px;
         }
-        
+        .form-overlay.active { display: flex; }
         .add-form {
-            background: #1A1A24;
-            border-radius: 20px;
-            padding: 25px;
-            width: 100%;
-            max-width: 400px;
+            background: var(--bg-card); border-radius: 20px;
+            padding: 25px; width: 100%; max-width: 450px;
         }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #444;
-            border-radius: 10px;
-            background: #222;
-            color: white;
+        .form-group { margin-bottom: 20px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 10px; color: var(--text);
         }
+        .form-actions { display: flex; gap: 15px; margin-top: 25px; }
+        .form-btn { flex: 1; padding: 15px; border-radius: 12px; border: none; cursor: pointer; }
+        .submit-btn { background: var(--primary); color: white; }
+        .cancel-btn { background: rgba(255, 255, 255, 0.1); color: var(--text); }
         
-        .form-btn {
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 48%;
-        }
-        
-        .submit-btn {
-            background: #00CC88;
-            color: white;
-        }
-        
-        .cancel-btn {
-            background: #666;
-            color: white;
-        }
-        
-        /* Уведомление */
         .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #1A1A24;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #00CC88;
-            display: none;
+            position: fixed; top: 20px; right: 20px; padding: 15px 20px;
+            background: var(--bg-card); border-radius: 12px;
+            transform: translateX(150%); transition: transform 0.3s;
             z-index: 1002;
         }
+        .notification.show { transform: translateX(0); }
+        
+        .loading { text-align: center; padding: 40px; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-secondary); }
     </style>
 </head>
 <body>
-    <!-- Плашка 18+ -->
-    <div id="ageGate">
-        <div class="age-icon">🚫</div>
+    <div id="ageGate" class="age-gate">
         <h1 class="age-title">ДОСТУП ОГРАНИЧЕН</h1>
-        <p class="age-text">Для доступа к VAPE MARKET подтвердите, что вам есть 18 лет</p>
+        <p class="age-text">Подтвердите, что вам есть 18 лет</p>
         <div class="age-buttons">
-            <button id="ageYes" class="age-btn">ДА, МНЕ ЕСТЬ 18</button>
-            <button id="ageNo" class="age-btn">НЕТ, МНЕ НЕТ 18</button>
+            <button id="ageYes" class="age-btn age-yes">ДА, МНЕ ЕСТЬ 18</button>
+            <button id="ageNo" class="age-btn age-no">НЕТ, МНЕ НЕТ 18</button>
         </div>
     </div>
 
-    <!-- Основное приложение -->
-    <div id="appContainer">
-        <!-- Шапка -->
+    <div class="app-container" id="appContainer" style="display: none;">
         <header class="header">
             <h1>VAPE MARKET</h1>
-            <p>Покупай и продавай безопасно</p>
+            <div class="header-subtitle">Покупай и продавай безопасно</div>
         </header>
 
-        <!-- Навигация -->
         <div class="nav-tabs">
             <button class="nav-tab active" data-tab="market">🛒 Маркет</button>
             <button class="nav-tab" data-tab="profile">👤 Профиль</button>
         </div>
 
-        <!-- Маркет -->
         <div id="marketTab">
-            <!-- Категории -->
-            <h3>Категории</h3>
-            <div class="categories-grid" id="categoriesGrid">
-                <!-- Загружается автоматически -->
+            <div class="categories">
+                <h2>Категории</h2>
+                <div class="categories-grid" id="categoriesGrid"></div>
             </div>
-
-            <!-- Товары -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Товары</h3>
-                <button class="add-product-btn" id="openAddForm">+ Добавить</button>
-            </div>
-            <div class="products-grid" id="productsGrid">
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                    Загрузка товаров...
+            
+            <div class="products-section">
+                <div class="section-header">
+                    <h2>Последние объявления</h2>
+                    <button class="add-product-btn" id="openAddForm">+ Добавить</button>
                 </div>
+                <div class="products-grid" id="productsGrid"></div>
             </div>
         </div>
 
-        <!-- Профиль -->
         <div id="profileTab" style="display: none;">
-            <div class="profile-header">
-                <div style="width: 80px; height: 80px; background: white; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #8A2BE2;">👤</div>
-                <h2 id="userName">Пользователь</h2>
-                <p id="userTelegram">@username</p>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="myProductsCount">0</div>
-                    <div>Мои объявления</div>
+            <div class="profile-section">
+                <div class="profile-header">
+                    <div class="user-avatar" id="userAvatar">👤</div>
+                    <h2 id="userName">Пользователь</h2>
+                    <div id="userTelegram">@username</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalViews">0</div>
-                    <div>Просмотры</div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="category-card">
+                        <div id="myProductsCount">0</div>
+                        <div>Мои объявления</div>
+                    </div>
+                    <div class="category-card">
+                        <div id="totalViews">0</div>
+                        <div>Просмотры</div>
+                    </div>
+                    <div class="category-card">
+                        <div id="totalLikes">0</div>
+                        <div>Лайки</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalLikes">0</div>
-                    <div>Лайки</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalDeals">0</div>
-                    <div>Сделки</div>
-                </div>
-            </div>
-
-            <h3>Мои объявления</h3>
-            <div class="products-grid" id="myProductsGrid">
-                <div style="grid-column: 1/-1; text-align: center; padding: 20px;">
-                    У вас нет объявлений
-                </div>
+                
+                <h2>Мои объявления</h2>
+                <div class="products-grid" id="myProductsGrid"></div>
             </div>
         </div>
 
-        <!-- Форма добавления -->
-        <div id="addFormOverlay">
+        <div class="form-overlay" id="addFormOverlay">
             <div class="add-form">
-                <h2 style="text-align: center; margin-bottom: 20px;">Добавить товар</h2>
+                <h2>Добавить объявление</h2>
                 <form id="addProductForm">
-                    <input type="text" class="form-input" name="title" placeholder="Название товара" required>
-                    <select class="form-input" name="category" required>
-                        <option value="">Выберите категорию</option>
-                        <option value="Устройства">Устройства</option>
-                        <option value="Жидкости">Жидкости</option>
-                        <option value="под-система">Pod-системы</option>
-                        <option value="одноразовые устройства">Одноразовые</option>
-                        <option value="расходники">Расходники</option>
-                    </select>
-                    <input type="number" class="form-input" name="price" placeholder="Цена (₽)" required>
-                    <textarea class="form-input" name="description" placeholder="Описание" rows="3"></textarea>
-                    <input type="url" class="form-input" name="image_url" placeholder="Ссылка на фото (не обязательно)">
-                    
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <div class="form-group">
+                        <label>Название товара</label>
+                        <input type="text" class="form-input" name="title" required placeholder="GeekVape Aegis">
+                    </div>
+                    <div class="form-group">
+                        <label>Категория</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">Выберите категорию</option>
+                            <option value="Устройства">Устройства</option>
+                            <option value="Жидкости">Жидкости</option>
+                            <option value="Pod-системы">Pod-системы</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Цена (₽)</label>
+                        <input type="number" class="form-input" name="price" required placeholder="3500">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea class="form-textarea" name="description" placeholder="Опишите товар..."></textarea>
+                    </div>
+                    <div class="form-actions">
                         <button type="button" class="form-btn cancel-btn" id="cancelAddForm">Отмена</button>
                         <button type="submit" class="form-btn submit-btn">Опубликовать</button>
                     </div>
@@ -363,61 +247,65 @@
             </div>
         </div>
 
-        <!-- Уведомление -->
         <div class="notification" id="notification"></div>
-
-        <!-- Подвал -->
-        <footer style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px;">
+        
+        <footer style="padding: 20px; text-align: center; color: var(--text-secondary); font-size: 12px;">
             <p>© 2024 VAPE MARKET | Только для лиц старше 18 лет</p>
-            <p>Все сделки через Telegram</p>
         </footer>
     </div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
     <script>
-        // ===== ПРОСТОЙ КОД БЕЗ ОШИБОК =====
+        // УПРОЩЕННАЯ ВЕРСИЯ БЕЗ ОШИБОК
         
-        // 1. ПЛАШКА 18+
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Страница загружена');
-            
-            const ageGate = document.getElementById('ageGate');
-            const ageYes = document.getElementById('ageYes');
-            const ageNo = document.getElementById('ageNo');
-            const appContainer = document.getElementById('appContainer');
-            
-            // Проверяем, подтвердил ли уже возраст
-            if (localStorage.getItem('ageConfirmed') === 'true') {
-                ageGate.style.display = 'none';
-                appContainer.style.display = 'block';
-                initApp();
-            }
-            
-            // Кнопка ДА
-            ageYes.addEventListener('click', function() {
-                console.log('Кнопка "ДА" нажата');
-                localStorage.setItem('ageConfirmed', 'true');
-                ageGate.style.display = 'none';
-                appContainer.style.display = 'block';
-                showNotification('✅ Доступ разрешен!');
-                initApp();
-            });
-            
-            // Кнопка НЕТ
-            ageNo.addEventListener('click', function() {
-                showNotification('🚫 Вам нет 18 лет. Доступ запрещен.');
-                setTimeout(() => location.reload(), 3000);
-            });
-        });
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4';
         
-        // 2. ОСНОВНОЕ ПРИЛОЖЕНИЕ
+        let supabase;
         let currentUser = {
             id: 'user_' + Date.now(),
             name: 'Пользователь',
             username: 'user'
         };
         
+        // 1. Проверка возраста
+        document.addEventListener('DOMContentLoaded', function() {
+            const ageGate = document.getElementById('ageGate');
+            const appContainer = document.getElementById('appContainer');
+            
+            if (localStorage.getItem('ageConfirmed')) {
+                ageGate.style.display = 'none';
+                appContainer.style.display = 'block';
+                initApp();
+            } else {
+                document.getElementById('ageYes').addEventListener('click', function() {
+                    localStorage.setItem('ageConfirmed', 'true');
+                    ageGate.style.display = 'none';
+                    appContainer.style.display = 'block';
+                    initApp();
+                });
+                
+                document.getElementById('ageNo').addEventListener('click', function() {
+                    alert('Доступ запрещен. Вам должно быть 18 лет.');
+                });
+            }
+        });
+        
+        // 2. Инициализация приложения
         async function initApp() {
-            console.log('Запуск приложения...');
+            showNotification('Приложение запущено');
+            
+            // Инициализация Supabase
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase подключен');
+            } catch (error) {
+                console.error('Ошибка Supabase:', error);
+                showNotification('Ошибка подключения к базе данных');
+                return;
+            }
             
             // Настройка навигации
             setupNavigation();
@@ -425,18 +313,15 @@
             // Настройка формы
             setupForm();
             
-            // Загружаем категории
+            // Загрузка данных
             loadCategories();
+            loadProducts();
             
-            // Загружаем товары
-            await loadProducts();
-            
-            // Обновляем профиль
+            // Обновление профиля
             updateProfile();
-            
-            showNotification('Добро пожаловать в VAPE MARKET!');
         }
         
+        // 3. Навигация
         function setupNavigation() {
             const tabs = document.querySelectorAll('.nav-tab');
             const marketTab = document.getElementById('marketTab');
@@ -444,274 +329,300 @@
             
             tabs.forEach(tab => {
                 tab.addEventListener('click', function() {
-                    // Убираем активный класс
                     tabs.forEach(t => t.classList.remove('active'));
-                    // Добавляем активный класс
                     this.classList.add('active');
                     
-                    // Показываем нужную вкладку
-                    const tabName = this.dataset.tab;
-                    marketTab.style.display = tabName === 'market' ? 'block' : 'none';
-                    profileTab.style.display = tabName === 'profile' ? 'block' : 'none';
-                    
-                    if (tabName === 'profile') {
+                    if (this.dataset.tab === 'market') {
+                        marketTab.style.display = 'block';
+                        profileTab.style.display = 'none';
+                    } else {
+                        marketTab.style.display = 'none';
+                        profileTab.style.display = 'block';
                         updateProfile();
                     }
                 });
             });
         }
         
+        // 4. Категории
         function loadCategories() {
             const categories = [
                 { id: 'Все', name: 'Все', count: 0 },
                 { id: 'Устройства', name: 'Устройства', count: 0 },
                 { id: 'Жидкости', name: 'Жидкости', count: 0 },
-                { id: 'под-система', name: 'Pod-системы', count: 0 },
-                { id: 'одноразовые устройства', name: 'Одноразовые', count: 0 },
-                { id: 'расходники', name: 'Расходники', count: 0 }
+                { id: 'Pod-системы', name: 'Pod-системы', count: 0 },
+                { id: 'Одноразовые', name: 'Одноразовые', count: 0 },
+                { id: 'Расходники', name: 'Расходники', count: 0 }
             ];
             
             const container = document.getElementById('categoriesGrid');
-            container.innerHTML = categories.map(cat => `
-                <div class="category-card" data-category="${cat.id}" onclick="filterProducts('${cat.id}')">
-                    <div style="font-size: 24px; margin-bottom: 5px;">📦</div>
-                    <div>${cat.name}</div>
-                    <div style="font-size: 12px; opacity: 0.7;">${cat.count}</div>
-                </div>
-            `).join('');
-        }
-        
-        let allProducts = [];
-        let myProducts = [];
-        
-        async function loadProducts() {
-            try {
-                // URL твоей базы данных
-                const url = 'https://kawspxlxbncaihbnoetc.supabase.co/rest/v1/mini_app_market?select=*';
-                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4';
+            container.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-card';
+                div.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 10px;">${getCategoryIcon(cat.id)}</div>
+                    <div style="font-weight: bold;">${cat.name}</div>
+                    <div style="color: #666; font-size: 12px;" id="cat-count-${cat.id}">0</div>
+                `;
                 
-                const response = await fetch(url, {
-                    headers: {
-                        'apikey': key,
-                        'Authorization': `Bearer ${key}`
-                    }
+                div.addEventListener('click', function() {
+                    document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    filterProducts(cat.id);
                 });
                 
-                const data = await response.json();
-                allProducts = data || [];
-                myProducts = allProducts.filter(p => p.user_telegram_id === currentUser.id);
+                if (cat.id === 'Все') div.classList.add('active');
                 
-                showProducts(allProducts);
-                updateCategoryCounts();
-                
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                document.getElementById('productsGrid').innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                        Ошибка загрузки товаров
-                    </div>
-                `;
-            }
+                container.appendChild(div);
+            });
         }
         
-        function showProducts(products) {
+        function getCategoryIcon(categoryId) {
+            const icons = {
+                'Все': '📦',
+                'Устройства': '📱',
+                'Жидкости': '💧',
+                'Pod-системы': '🔋',
+                'Одноразовые': '🚬',
+                'Расходники': '⚙️'
+            };
+            return icons[categoryId] || '📦';
+        }
+        
+        // 5. Товары
+        async function loadProducts() {
             const container = document.getElementById('productsGrid');
+            container.innerHTML = '<div class="loading">Загрузка товаров...</div>';
             
-            if (!products || products.length === 0) {
-                container.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                        Товары не найдены
-                    </div>
-                `;
-                return;
+            try {
+                const { data, error } = await supabase
+                    .from('mini_app_market')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                
+                if (error) throw error;
+                
+                window.products = data || [];
+                filterProducts('Все');
+                
+            } catch (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                container.innerHTML = '<div class="empty-state">Ошибка загрузки товаров</div>';
             }
-            
-            container.innerHTML = products.map(product => `
-                <div class="product-card">
-                    <div class="product-title">${product.title || 'Без названия'}</div>
-                    <div style="background: rgba(138,43,226,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 5px 0;">
-                        ${product.category || 'Без категории'}
-                    </div>
-                    <div class="product-price">${product.price || 0} ₽</div>
-                    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 10px;">
-                        👤 ${product.user_name || 'Аноним'} | 👁️ ${product.views_count || 0} | ❤️ ${product.likes_count || 0}
-                    </div>
-                    <button class="action-btn buy-btn" onclick="buyProduct('${product.id}', '${product.telegram_username || ''}')">
-                        Купить
-                    </button>
-                    <button class="action-btn" style="background: #666; color: white;" onclick="likeProduct('${product.id}')">
-                        ❤️ ${product.likes_count || 0}
-                    </button>
-                </div>
-            `).join('');
         }
         
         function filterProducts(category) {
-            // Убираем активный класс у всех
-            document.querySelectorAll('.category-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            // Добавляем активный класс выбранной
-            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            const container = document.getElementById('productsGrid');
             
-            let filtered = allProducts;
-            if (category !== 'Все') {
-                filtered = allProducts.filter(p => p.category === category);
+            let filteredProducts = window.products || [];
+            if (category && category !== 'Все') {
+                filteredProducts = filteredProducts.filter(p => p.category === category);
             }
             
-            showProducts(filtered);
+            if (filteredProducts.length === 0) {
+                container.innerHTML = '<div class="empty-state">Товары не найдены</div>';
+                return;
+            }
+            
+            container.innerHTML = filteredProducts.map(product => `
+                <div class="product-card">
+                    <div class="product-image">📱</div>
+                    <div class="product-content">
+                        <div class="product-title">${product.title || 'Без названия'}</div>
+                        <div class="product-price">${product.price || 0} ₽</div>
+                        <div style="background: rgba(138, 43, 226, 0.2); color: #9B4DFF; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 10px;">
+                            ${product.category || 'Без категории'}
+                        </div>
+                        <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                            ${product.user_name || 'Аноним'}
+                        </div>
+                        <div class="product-actions">
+                            <button class="action-btn buy-btn" onclick="buyProduct('${product.id}', '${product.telegram_username || ''}')">
+                                Купить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Обновляем счетчики категорий
+            updateCategoryCounts();
         }
         
         function updateCategoryCounts() {
-            const categories = ['Все', 'Устройства', 'Жидкости', 'под-система', 'одноразовые устройства', 'расходники'];
+            const categories = ['Все', 'Устройства', 'Жидкости', 'Pod-системы', 'Одноразовые', 'Расходники'];
+            const products = window.products || [];
             
             categories.forEach(cat => {
-                let count = 0;
-                if (cat === 'Все') {
-                    count = allProducts.length;
-                } else {
-                    count = allProducts.filter(p => p.category === cat).length;
-                }
-                
-                const card = document.querySelector(`[data-category="${cat}"]`);
-                if (card) {
-                    card.querySelector('div:last-child').textContent = count;
+                const countElement = document.getElementById(`cat-count-${cat}`);
+                if (countElement) {
+                    let count = 0;
+                    if (cat === 'Все') {
+                        count = products.length;
+                    } else {
+                        count = products.filter(p => p.category === cat).length;
+                    }
+                    countElement.textContent = count;
                 }
             });
         }
         
+        // 6. Профиль
         function updateProfile() {
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userTelegram').textContent = '@' + currentUser.username;
+            
+            const myProducts = (window.products || []).filter(p => p.user_telegram_id === currentUser.id);
+            
             document.getElementById('myProductsCount').textContent = myProducts.length;
             
             const totalViews = myProducts.reduce((sum, p) => sum + (p.views_count || 0), 0);
-            const totalLikes = myProducts.reduce((sum, p) => sum + (p.likes_count || 0), 0);
-            const totalDeals = myProducts.reduce((sum, p) => sum + (p.deals_count || 0), 0);
-            
             document.getElementById('totalViews').textContent = totalViews;
-            document.getElementById('totalLikes').textContent = totalLikes;
-            document.getElementById('totalDeals').textContent = totalDeals;
             
-            // Мои товары в профиле
-            const myContainer = document.getElementById('myProductsGrid');
+            const totalLikes = myProducts.reduce((sum, p) => sum + (p.likes_count || 0), 0);
+            document.getElementById('totalLikes').textContent = totalLikes;
+            
+            // Мои товары
+            const myProductsContainer = document.getElementById('myProductsGrid');
             if (myProducts.length === 0) {
-                myContainer.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 20px;">
-                        У вас нет объявлений
-                    </div>
-                `;
-            } else {
-                myContainer.innerHTML = myProducts.map(product => `
-                    <div class="product-card">
-                        <div class="product-title">${product.title || 'Без названия'}</div>
-                        <div class="product-price">${product.price || 0} ₽</div>
-                        <div style="font-size: 12px; opacity: 0.8;">
-                            👁️ ${product.views_count || 0} | ❤️ ${product.likes_count || 0} | 🤝 ${product.deals_count || 0}
-                        </div>
-                        <button class="action-btn buy-btn" onclick="editProduct('${product.id}')" style="margin-top: 10px;">
-                            Редактировать
-                        </button>
-                    </div>
-                `).join('');
+                myProductsContainer.innerHTML = '<div class="empty-state">У вас нет объявлений</div>';
+                return;
             }
+            
+            myProductsContainer.innerHTML = myProducts.map(product => `
+                <div class="product-card">
+                    <div class="product-image">📱</div>
+                    <div class="product-content">
+                        <div class="product-title">${product.title}</div>
+                        <div class="product-price">${product.price} ₽</div>
+                        <div class="product-actions">
+                            <button class="action-btn buy-btn" style="background: #FFAA00;" onclick="editProduct('${product.id}')">
+                                Редактировать
+                            </button>
+                            <button class="action-btn" style="background: #FF3366; color: white;" onclick="deleteProduct('${product.id}')">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
         
+        // 7. Форма добавления
         function setupForm() {
             const openBtn = document.getElementById('openAddForm');
             const overlay = document.getElementById('addFormOverlay');
             const cancelBtn = document.getElementById('cancelAddForm');
             const form = document.getElementById('addProductForm');
             
-            openBtn.addEventListener('click', () => {
-                overlay.style.display = 'flex';
+            openBtn.addEventListener('click', function() {
+                overlay.classList.add('active');
             });
             
-            cancelBtn.addEventListener('click', () => {
-                overlay.style.display = 'none';
+            cancelBtn.addEventListener('click', function() {
+                overlay.classList.remove('active');
+                form.reset();
             });
             
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const formData = new FormData(this);
+                const formData = new FormData(form);
                 const productData = {
                     title: formData.get('title'),
                     category: formData.get('category'),
                     price: parseInt(formData.get('price')) || 0,
-                    description: formData.get('description') || '',
-                    image_url: formData.get('image_url') || null,
+                    description: formData.get('description'),
                     user_name: currentUser.name,
                     telegram_username: currentUser.username,
                     user_telegram_id: currentUser.id,
                     is_active: true,
-                    views_count: 0,
                     likes_count: 0,
-                    deals_count: 0
+                    views_count: 0,
+                    deals_count: 0,
+                    created_at: new Date().toISOString()
                 };
                 
                 try {
-                    const url = 'https://kawspxlxbncaihbnoetc.supabase.co/rest/v1/mini_app_market';
-                    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4';
+                    const { error } = await supabase
+                        .from('mini_app_market')
+                        .insert([productData]);
                     
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`
-                        },
-                        body: JSON.stringify([productData])
-                    });
+                    if (error) throw error;
                     
-                    if (response.ok) {
-                        showNotification('✅ Товар добавлен!');
-                        overlay.style.display = 'none';
-                        this.reset();
-                        await loadProducts();
-                    } else {
-                        throw new Error('Ошибка сервера');
-                    }
+                    showNotification('Товар добавлен!');
+                    overlay.classList.remove('active');
+                    form.reset();
+                    
+                    // Перезагружаем товары
+                    await loadProducts();
+                    updateProfile();
+                    
                 } catch (error) {
-                    console.error('Ошибка:', error);
-                    showNotification('❌ Ошибка добавления товара');
+                    console.error('Ошибка добавления:', error);
+                    showNotification('Ошибка добавления товара');
+                }
+            });
+            
+            // Закрытие по клику вне формы
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    form.reset();
                 }
             });
         }
         
-        // 3. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.display = 'block';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-        
-        function buyProduct(productId, telegram) {
-            if (telegram) {
-                window.open(`https://t.me/${telegram.replace('@', '')}`, '_blank');
+        // 8. Действия с товарами
+        function buyProduct(productId, telegramUsername) {
+            if (telegramUsername) {
+                const url = `https://t.me/${telegramUsername.replace('@', '')}`;
+                window.open(url, '_blank');
                 showNotification('Открываю Telegram...');
             } else {
-                showNotification('Продавец не указал Telegram');
+                showNotification('Продавец не указал контакты');
             }
         }
         
-        function likeProduct(productId) {
-            showNotification('Лайк добавлен!');
+        async function deleteProduct(productId) {
+            if (!confirm('Удалить это объявление?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('mini_app_market')
+                    .update({ is_active: false })
+                    .eq('id', productId);
+                
+                if (error) throw error;
+                
+                showNotification('Объявление удалено');
+                await loadProducts();
+                updateProfile();
+                
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                showNotification('Ошибка удаления');
+            }
         }
         
         function editProduct(productId) {
             showNotification('Редактирование в разработке');
         }
         
-        // Глобальные функции для onclick
-        window.filterProducts = filterProducts;
-        window.buyProduct = buyProduct;
-        window.likeProduct = likeProduct;
-        window.editProduct = editProduct;
+        // 9. Уведомления
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
     </script>
 </body>
 </html>
