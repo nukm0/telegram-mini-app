@@ -1324,38 +1324,62 @@
         }
 
         // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
-        async function initApp() {
-            initTelegram();
-            await initSupabase();
-            initNavigation();
-            initAddForm();
-            await loadCategories();
-            await loadProducts();
-            
-            // Автообновление каждые 30 секунд
-            setInterval(async () => {
-                await loadProducts();
-            }, 30000);
-            
-            showNotification('Добро пожаловать в VAPE MARKET!', 'success');
-        }
+async function initApp() {
+    console.log('🚀 Запуск приложения...');
+    
+    // Инициализируем Telegram
+    initTelegram();
+    
+    // Инициализируем Supabase
+    await initSupabase();
+    
+    // Настраиваем интерфейс
+    initNavigation();
+    initAddForm();
+    
+    // Загружаем данные
+    await loadCategories();
+    await loadProducts();
+    
+    // Показываем уведомление
+    showNotification('✅ VAPE MARKET загружен!', 'success');
+    
+    // Автообновление каждые 30 секунд
+    setInterval(async () => {
+        console.log('🔄 Автообновление товаров...');
+        await loadProducts();
+    }, 30000);
+}
 
-        // ===== ЗАПУСК =====
-        document.addEventListener('DOMContentLoaded', () => {
-            initAgeGate();
-            
-            // Добавляем RPC функции в Supabase
-            setTimeout(() => {
-                if (supabase) {
-                    // Создаем RPC функции для увеличения счетчиков
-                    supabase.rpc('increment_views', { row_id: '' }).catch(() => {});
-                    supabase.rpc('increment_likes', { row_id: '' }).catch(() => {});
-                    supabase.rpc('decrement_likes', { row_id: '' }).catch(() => {});
-                    supabase.rpc('increment_deals', { row_id: '' }).catch(() => {});
-                }
-            }, 2000);
-        });
+// ===== ЗАПУСК =====
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 Страница загружена');
+    
+    // Запускаем проверку возраста
+    initAgeGate();
+});
 
+// ===== ДЕБАГ ФУНКЦИЯ =====
+// Добавь ЭТУ функцию для тестирования без Telegram
+function debugLogin() {
+    console.log('🔧 Режим отладки (без Telegram)');
+    currentUser = {
+        id: 'debug_user_123',
+        name: 'Тестовый Пользователь',
+        username: 'test_user',
+        avatar: null
+    };
+    
+    document.getElementById('userName').textContent = currentUser.name;
+    document.getElementById('userTelegram').textContent = '@' + currentUser.username;
+    
+    // Скрываем плашку 18+
+    document.getElementById('ageGate').classList.add('hidden');
+    document.getElementById('appContainer').style.display = 'block';
+    
+    // Запускаем приложение
+    initApp();
+}
         // ===== RPC ФУНКЦИИ (нужно добавить в Supabase через SQL Editor) =====
         // Эти функции нужно создать в Supabase через SQL Editor:
         /*
