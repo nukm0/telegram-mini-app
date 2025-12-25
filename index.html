@@ -7,40 +7,195 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="app.js" defer></script>
+    <!-- Иконки для улучшенного UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .photo-upload-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .photo-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            min-height: 100px;
+        }
+        
+        .photo-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .upload-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .photo-counter {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .photo-counter.warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 30px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .photo-placeholder:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .ad-photos-carousel {
+            position: relative;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 200px;
+        }
+        
+        .carousel-slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .carousel-slide.active {
+            display: block;
+        }
+        
+        .carousel-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        
+        .carousel-dot.active {
+            background: white;
+        }
+        
+        .photo-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <!-- Шапка -->
         <header class="header">
-            <h1>🚀 VAPE Market</h1>
+            <h1><i class="fas fa-smoking"></i> VAPE Market</h1>
             <div class="user-info">
                 <span id="userName">Загрузка...</span>
-                <button onclick="openProfile()">👤</button>
+                <button onclick="openProfile()"><i class="fas fa-user"></i></button>
             </div>
         </header>
 
         <!-- Категории -->
         <div class="categories">
-            <h2>Категории товаров</h2>
+            <h2><i class="fas fa-list"></i> Категории товаров</h2>
             <div class="category-grid">
                 <div class="category-card" onclick="showCategory('liquids')">
-                    <div class="category-icon">💧</div>
+                    <div class="category-icon"><i class="fas fa-tint"></i></div>
                     <h3>Жидкости</h3>
                 </div>
                 <div class="category-card" onclick="showCategory('consumables')">
-                    <div class="category-icon">🔧</div>
+                    <div class="category-icon"><i class="fas fa-tools"></i></div>
                     <h3>Расходники</h3>
                 </div>
                 <div class="category-card" onclick="showCategory('disposables')">
-                    <div class="category-icon">📱</div>
+                    <div class="category-icon"><i class="fas fa-mobile-alt"></i></div>
                     <h3>Одноразовые</h3>
                 </div>
                 <div class="category-card" onclick="showCategory('pod-systems')">
-                    <div class="category-icon">⚡</div>
+                    <div class="category-icon"><i class="fas fa-bolt"></i></div>
                     <h3>Под-системы</h3>
                 </div>
                 <div class="category-card" onclick="showCategory('others')">
-                    <div class="category-icon">📦</div>
+                    <div class="category-icon"><i class="fas fa-box"></i></div>
                     <h3>Другое</h3>
                 </div>
             </div>
@@ -48,7 +203,7 @@
 
         <!-- Объявления -->
         <div class="ads-section">
-            <h2>Последние объявления</h2>
+            <h2><i class="fas fa-fire"></i> Последние объявления</h2>
             <div id="adsContainer" class="ads-grid">
                 <!-- Объявления загружаются через JavaScript -->
             </div>
@@ -56,14 +211,14 @@
 
         <!-- Кнопка добавления -->
         <button class="add-btn" onclick="openAddForm()">
-            + Добавить объявление
+            <i class="fas fa-plus-circle"></i> Добавить объявление
         </button>
 
         <!-- Панель навигации -->
         <nav class="bottom-nav">
-            <button onclick="showHome()">🏠 Главная</button>
-            <button onclick="showMyAds()">📋 Мои объявления</button>
-            <button onclick="showChats()">💬 Сообщения</button>
+            <button onclick="showHome()"><i class="fas fa-home"></i> Главная</button>
+            <button onclick="showMyAds()"><i class="fas fa-clipboard-list"></i> Мои объявления</button>
+            <button onclick="showChats()"><i class="fas fa-comments"></i> Сообщения</button>
         </nav>
     </div>
 
@@ -73,6 +228,14 @@
             <span class="close" onclick="closeModal()">&times;</span>
             <div id="modalBody"></div>
         </div>
+    </div>
+    
+    <!-- Скрытый input для загрузки фото -->
+    <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+    
+    <!-- Контейнер для превью фото -->
+    <div id="photoPreviewContainer" style="display: none;">
+        <!-- Будет заполняться через JavaScript -->
     </div>
 </body>
 </html>
