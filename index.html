@@ -1089,4 +1089,312 @@
                                 <span>${product.views_count || 0}</span>
                             </div>
                             <div class="product-stat">
-                                <span>❤️
+                                <span>❤️</span>
+                                <span>${product.likes_count || 0}</span>
+                            </div>
+                            <div class="product-stat">
+                                <span>🤝</span>
+                                <span>${product.deals_count || 0}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-actions">
+                            <button class="action-btn buy-btn" onclick="handleBuy('${product.id}', '${currentUser.username}')">
+                                Редактировать
+                            </button>
+                            <button class="action-btn like-btn" onclick="handleDelete('${product.id}')" style="background:var(--danger);">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== ОБРАБОТЧИКИ ДЕЙСТВИЙ =====
+        async function trackView(productId) {
+            if (!currentUser) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('product_views')
+                    .insert({
+                        product_id: productId,
+                        user_telegram_id: currentUser.id
+                    })
+                    .select();
+                
+                if (!error) {
+                    // Увеличиваем счетчик просмотров
+                    await supabase.rpc('increment_views', { row_id: productId });
+                }
+            } catch (error) {
+                console.error('Ошибка отслеживания просмотра:', error);
+            }
+        }
+
+        async function handleLike(productId) {
+            if (!currentUser) {
+                showNotification('Войдите в аккаунт', 'error');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('product_likes')
+                    .insert({
+                        product_id: productId,
+                        user_telegram_id: currentUser.id
+                    })
+                    .select();
+                
+                if (error && error.code === '23505') {
+                    // Уже лайкнуто - убираем лайк
+                    await supabase
+                        .from('product_likes')
+                        .delete()
+                        .eq('product_id', productId)
+                        .eq('user_telegram_id', currentUser.id);
+                    
+                    await supabase.rpc('decrement_likes', { row_id: productId });
+                    showNotification('Лайк удален', 'info');
+                } else if (!error) {
+                    await supabase.rpc('increment_likes', { row_id: productId });
+                    showNotification('Товар понравился!', 'success');
+                }
+                
+                // Обновляем данные
+                await loadProducts();
+                
+            } catch (error) {
+                console.error('Ошибка лайка:', error);
+                showNotification('Ошибка', 'error');
+            }
+        }
+
+        function isProductLiked(productId) {
+            // В реальном приложении нужно проверять в базе
+            return false;
+        }
+
+        function handleBuy(productId, sellerTelegram) {
+            if (!currentUser) {
+                showNotification('Войдите в аккаунт', 'error');
+                return;
+            }
+            
+            if (sellerTelegram) {
+                const message = `Привет! Я хочу купить товар ${productId} на VAPE MARKET`;
+                const url = `https://t.me/${sellerTelegram.replace('@', '')}`;
+                
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.openTelegramLink(`tg://resolve?domain=${sellerTelegram.replace('@', '')}&start=${productId}`);
+                } else {
+                    window.open(url, '_blank');
+                }
+                
+                // Увеличиваем счетчик сделок
+                supabase.rpc('increment_deals', { row_id: productId });
+                
+                // Создаем запись о сделке
+                supabase
+                    .from('deals')
+                    .insert({
+                        product_id: productId,
+                        buyer_telegram_id: currentUser.id,
+                        seller_telegram_id: sellerTelegram,
+                        status: 'pending'
+                    });
+                    
+                showNotification('Открываю Telegram...', 'success');
+            } else {
+                showNotification('Продавец не указал Telegram', 'error');
+            }
+        }
+
+        async function handleDelete(productId) {
+            if (!confirm('Удалить это объявление?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('mini_app_market')
+                    .update({ is_active: false })
+                    .eq('id', productId);
+                
+                if (error) throw error;
+                
+                showNotification('Объявление удалено', 'success');
+                await loadProducts();
+                
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                showNotification('Ошибка удаления', 'error');
+            }
+        }
+
+        // ===== ФОРМА ДОБАВЛЕНИЯ =====
+        function initAddForm() {
+            const openBtn = document.getElementById('openAddForm');
+            const overlay = document.getElementById('addFormOverlay');
+            const cancelBtn = document.getElementById('cancelAddForm');
+            const form = document.getElementById('addProductForm');
+            
+            openBtn.addEventListener('click', () => {
+                overlay.classList.add('active');
+            });
+            
+            cancelBtn.addEventListener('click', () => {
+                overlay.classList.remove('active');
+            });
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentUser) {
+                    showNotification('Войдите в аккаунт', 'error');
+                    return;
+                }
+                
+                const formData = new FormData(form);
+                const productData = {
+                    title: formData.get('title'),
+                    category: formData.get('category'),
+                    price: parseInt(formData.get('price')),
+                    description: formData.get('description'),
+                    image_url: formData.get('image_url'),
+                    user_name: currentUser.name,
+                    telegram_username: currentUser.username,
+                    user_telegram_id: currentUser.id,
+                    is_active: true,
+                    likes_count: 0,
+                    views_count: 0,
+                    deals_count: 0
+                };
+                
+                try {
+                    const { error } = await supabase
+                        .from('mini_app_market')
+                        .insert([productData]);
+                    
+                    if (error) throw error;
+                    
+                    showNotification('✅ Товар добавлен!', 'success');
+                    overlay.classList.remove('active');
+                    form.reset();
+                    await loadProducts();
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления:', error);
+                    showNotification('Ошибка добавления товара', 'error');
+                }
+            });
+            
+            // Закрытие по клику вне формы
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        }
+
+        // ===== НАВИГАЦИЯ =====
+        function initNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const marketTab = document.getElementById('marketTab');
+            const profileTab = document.getElementById('profileTab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Убираем активный класс у всех
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Добавляем активный класс нажатой
+                    tab.classList.add('active');
+                    
+                    // Показываем соответствующий контент
+                    const tabName = tab.dataset.tab;
+                    marketTab.style.display = tabName === 'market' ? 'block' : 'none';
+                    profileTab.style.display = tabName === 'profile' ? 'block' : 'none';
+                    
+                    // Обновляем профиль при переходе
+                    if (tabName === 'profile') {
+                        updateProfileStats();
+                    }
+                });
+            });
+        }
+
+        // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
+        async function initApp() {
+            initTelegram();
+            await initSupabase();
+            initNavigation();
+            initAddForm();
+            await loadCategories();
+            await loadProducts();
+            
+            // Автообновление каждые 30 секунд
+            setInterval(async () => {
+                await loadProducts();
+            }, 30000);
+            
+            showNotification('Добро пожаловать в VAPE MARKET!', 'success');
+        }
+
+        // ===== ЗАПУСК =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initAgeGate();
+            
+            // Добавляем RPC функции в Supabase
+            setTimeout(() => {
+                if (supabase) {
+                    // Создаем RPC функции для увеличения счетчиков
+                    supabase.rpc('increment_views', { row_id: '' }).catch(() => {});
+                    supabase.rpc('increment_likes', { row_id: '' }).catch(() => {});
+                    supabase.rpc('decrement_likes', { row_id: '' }).catch(() => {});
+                    supabase.rpc('increment_deals', { row_id: '' }).catch(() => {});
+                }
+            }, 2000);
+        });
+
+        // ===== RPC ФУНКЦИИ (нужно добавить в Supabase через SQL Editor) =====
+        // Эти функции нужно создать в Supabase через SQL Editor:
+        /*
+        CREATE OR REPLACE FUNCTION increment_views(row_id uuid)
+        RETURNS void AS $$
+        BEGIN
+            UPDATE mini_app_market 
+            SET views_count = COALESCE(views_count, 0) + 1
+            WHERE id = row_id;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION increment_likes(row_id uuid)
+        RETURNS void AS $$
+        BEGIN
+            UPDATE mini_app_market 
+            SET likes_count = COALESCE(likes_count, 0) + 1
+            WHERE id = row_id;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION decrement_likes(row_id uuid)
+        RETURNS void AS $$
+        BEGIN
+            UPDATE mini_app_market 
+            SET likes_count = GREATEST(COALESCE(likes_count, 0) - 1, 0)
+            WHERE id = row_id;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION increment_deals(row_id uuid)
+        RETURNS void AS $$
+        BEGIN
+            UPDATE mini_app_market 
+            SET deals_count = COALESCE(deals_count, 0) + 1
+            WHERE id = row_id;
+        END;
+        $$ LANGUAGE plpgsql;
+        */
+    </script>
+</body>
+</html>
