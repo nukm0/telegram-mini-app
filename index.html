@@ -942,39 +942,8 @@
             }
         }
 
-        // ===== ВОЗРАСТНАЯ ПРОВЕРКА =====
-        function initAgeGate() {
-            const ageGate = document.getElementById('ageGate');
-            const ageYes = document.getElementById('ageYes');
-            const ageNo = document.getElementById('ageNo');
-            const appContainer = document.getElementById('appContainer');
-            
-            const hasAgeConfirmed = localStorage.getItem('ageConfirmed') === 'true';
-            
-            if (hasAgeConfirmed) {
-                ageGate.classList.add('hidden');
-                appContainer.style.display = 'block';
-                setTimeout(() => initApp(), 100);
-            } else {
-                ageYes.addEventListener('click', () => {
-                    localStorage.setItem('ageConfirmed', 'true');
-                    ageGate.classList.add('hidden');
-                    appContainer.style.display = 'block';
-                    setTimeout(() => initApp(), 100);
-                    showNotification('✅ Доступ разрешен!', 'success');
-                });
-                
-                ageNo.addEventListener('click', () => {
-                    showNotification('🚫 Вам нет 18 лет. Доступ запрещен.', 'error');
-                    setTimeout(() => {
-                        showNotification('Повторная проверка через 5 секунд...', 'warning');
-                    }, 2000);
-                    setTimeout(() => {
-                        location.reload();
-                    }, 7000);
-                });
-            }
-        }
+        Code 55% faster with GitHub Copilot
+Spend less time creating boilerplate and repetitive code patterns, and more time building great software. Try it in Codespaces or your favorite file editor.
 
         // ===== УВЕДОМЛЕНИЯ =====
         function showNotification(message, type = 'info') {
