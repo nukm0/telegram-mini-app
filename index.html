@@ -306,11 +306,27 @@
             box-shadow: var(--shadow);
         }
 
-        .product-image {
+        .product-image-container {
             width: 100%;
             height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            background: linear-gradient(45deg, var(--primary-dark), var(--primary));
+        }
+
+        .product-image-placeholder {
+            width: 100%;
+            height: 100%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
         }
 
         .product-content {
@@ -386,6 +402,17 @@
 
         .like-btn.liked {
             color: var(--danger);
+            background: rgba(255, 51, 102, 0.1);
+        }
+
+        .edit-btn {
+            background: var(--warning);
+            color: white;
+        }
+
+        .delete-btn {
+            background: var(--danger);
+            color: white;
         }
 
         /* ===== ЛИЧНЫЙ КАБИНЕТ ===== */
@@ -425,6 +452,13 @@
             align-items: center;
             justify-content: center;
             font-size: 32px;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-name {
@@ -505,6 +539,8 @@
             width: 100%;
             max-width: 450px;
             border: 1px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .form-title {
@@ -606,6 +642,10 @@
             border-left-color: var(--danger);
         }
 
+        .notification.warning {
+            border-left-color: var(--warning);
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             padding: 20px;
@@ -638,6 +678,20 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            opacity: 0.5;
         }
 
         /* ===== SCROLLBAR ===== */
@@ -758,12 +812,13 @@
                 <h2 class="form-title">Добавить объявление</h2>
                 <form id="addProductForm">
                     <div class="form-group">
-                        <label class="form-label">Название товара</label>
-                        <input type="text" class="form-input" name="title" required placeholder="Например: GeekVape Aegis">
+                        <label class="form-label">Название товара *</label>
+                        <input type="text" class="form-input" name="title" required 
+                               placeholder="Например: GeekVape Aegis" maxlength="100">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Категория</label>
+                        <label class="form-label">Категория *</label>
                         <select class="form-select" name="category" required>
                             <option value="">Выберите категорию</option>
                             <option value="Устройства">Устройства</option>
@@ -775,18 +830,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Цена (₽)</label>
-                        <input type="number" class="form-input" name="price" required placeholder="Например: 3500">
+                        <label class="form-label">Цена (₽) *</label>
+                        <input type="number" class="form-input" name="price" required 
+                               placeholder="Например: 3500" min="0" max="1000000">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Описание</label>
-                        <textarea class="form-textarea" name="description" placeholder="Опишите товар..."></textarea>
+                        <textarea class="form-textarea" name="description" 
+                                  placeholder="Опишите товар, укажите состояние, комплектацию..." 
+                                  maxlength="500"></textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Ссылка на фото (URL)</label>
-                        <input type="url" class="form-input" name="image_url" placeholder="https://example.com/photo.jpg">
+                        <input type="url" class="form-input" name="image_url" 
+                               placeholder="https://example.com/photo.jpg">
                     </div>
 
                     <div class="form-actions">
@@ -822,6 +881,8 @@
         let currentCategory = 'Все';
         let myProducts = [];
         let allProducts = [];
+        let userLikes = new Set();
+        let likedProducts = new Set();
 
         // ===== ТЕЛЕГРАМ =====
         function initTelegram() {
@@ -829,6 +890,8 @@
                 if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
                     Telegram.WebApp.ready();
                     Telegram.WebApp.expand();
+                    Telegram.WebApp.setHeaderColor('#8A2BE2');
+                    Telegram.WebApp.setBackgroundColor('#0A0A0F');
                     
                     const initData = Telegram.WebApp.initDataUnsafe;
                     if (initData && initData.user) {
@@ -844,9 +907,12 @@
                         document.getElementById('userName').textContent = currentUser.name;
                         document.getElementById('userTelegram').textContent = '@' + currentUser.username;
                         
+                        const userAvatar = document.getElementById('userAvatar');
                         if (currentUser.avatar) {
-                            document.getElementById('userAvatar').innerHTML = 
-                                `<img src="${currentUser.avatar}" style="width:100%;height:100%;border-radius:50%;">`;
+                            userAvatar.innerHTML = `<img src="${currentUser.avatar}" alt="${currentUser.name}">`;
+                        } else {
+                            const initials = currentUser.name.charAt(0).toUpperCase();
+                            userAvatar.textContent = initials;
                         }
                         
                         console.log('✅ Telegram user loaded:', currentUser);
@@ -863,6 +929,11 @@
         async function initSupabase() {
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                // Проверяем подключение
+                const { data, error } = await supabase.from('mini_app_market').select('count', { count: 'exact', head: true });
+                if (error) throw error;
+                
                 console.log('✅ Supabase инициализирован');
                 return true;
             } catch (error) {
@@ -896,7 +967,7 @@
                 ageNo.addEventListener('click', () => {
                     showNotification('🚫 Вам нет 18 лет. Доступ запрещен.', 'error');
                     setTimeout(() => {
-                        showNotification('Повторная проверка через 5 секунд...', 'error');
+                        showNotification('Повторная проверка через 5 секунд...', 'warning');
                     }, 2000);
                     setTimeout(() => {
                         location.reload();
@@ -937,14 +1008,15 @@
                 </div>
             `).join('');
             
-            // Обработчики кликов
-            document.querySelectorAll('.category-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    currentCategory = card.dataset.category;
+            // Обработчики кликов через делегирование
+            container.addEventListener('click', (e) => {
+                const categoryCard = e.target.closest('.category-card');
+                if (categoryCard) {
+                    currentCategory = categoryCard.dataset.category;
                     document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
-                    card.classList.add('active');
+                    categoryCard.classList.add('active');
                     filterProducts();
-                });
+                }
             });
         }
 
@@ -964,7 +1036,17 @@
                 if (error) throw error;
                 
                 allProducts = data || [];
-                myProducts = currentUser ? allProducts.filter(p => p.user_telegram_id === currentUser.id) : [];
+                
+                // Загружаем лайки пользователя
+                if (currentUser) {
+                    const likedProductsStr = localStorage.getItem(`likes_${currentUser.id}`) || '[]';
+                    likedProducts = new Set(JSON.parse(likedProductsStr));
+                    
+                    // Фильтруем свои товары
+                    myProducts = allProducts.filter(p => p.user_telegram_id === currentUser.id);
+                } else {
+                    myProducts = [];
+                }
                 
                 // Обновляем счетчики категорий
                 updateCategoryCounts();
@@ -979,7 +1061,15 @@
                 
             } catch (error) {
                 console.error('❌ Ошибка загрузки товаров:', error);
-                productsGrid.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">Ошибка загрузки товаров</div>';
+                productsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">😕</div>
+                        <div>Ошибка загрузки товаров</div>
+                        <button onclick="location.reload()" style="margin-top:15px;padding:10px 20px;background:var(--gradient);border:none;border-radius:10px;color:white;cursor:pointer;">
+                            Попробовать снова
+                        </button>
+                    </div>
+                `;
                 showNotification('Ошибка загрузки товаров', 'error');
             }
         }
@@ -1010,19 +1100,31 @@
             }
             
             if (filtered.length === 0) {
-                productsGrid.innerHTML = '<div style="text-align:center;padding:40px;color:#666;grid-column:1/-1;">Товары не найдены</div>';
+                productsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div>Товары не найдены</div>
+                    </div>
+                `;
                 return;
             }
             
-            productsGrid.innerHTML = filtered.map(product => `
+            productsGrid.innerHTML = filtered.map(product => {
+                const isLiked = likedProducts.has(product.id);
+                const isMyProduct = currentUser && product.user_telegram_id === currentUser.id;
+                
+                return `
                 <div class="product-card" data-id="${product.id}">
-                    <div class="product-image" style="background: linear-gradient(45deg, #${product.id?.slice(0,6) || '8A2BE2'}, #${product.id?.slice(6,12) || '5D00A3'});">
-                        ${product.image_url ? `<img src="${product.image_url}" class="product-image" onerror="this.style.display='none'">` : ''}
+                    <div class="product-image-container">
+                        ${product.image_url ? 
+                            `<img src="${product.image_url}" class="product-image" alt="${product.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"product-image-placeholder\">📱</div>';">` : 
+                            `<div class="product-image-placeholder">📱</div>`
+                        }
                     </div>
                     <div class="product-content">
-                        <div class="product-title">${product.title || 'Без названия'}</div>
-                        <div class="product-price">${product.price || 0} ₽</div>
-                        <div class="product-category">${product.category || 'Без категории'}</div>
+                        <div class="product-title">${escapeHtml(product.title) || 'Без названия'}</div>
+                        <div class="product-price">${formatPrice(product.price || 0)} ₽</div>
+                        <div class="product-category">${escapeHtml(product.category) || 'Без категории'}</div>
                         
                         <div class="product-stats">
                             <div class="product-stat">
@@ -1042,22 +1144,32 @@
                         <div class="product-stats">
                             <div class="product-stat">
                                 <span>👤</span>
-                                <span>${product.user_name || 'Аноним'}</span>
+                                <span>${escapeHtml(product.user_name) || 'Аноним'}</span>
                             </div>
                         </div>
                         
                         <div class="product-actions">
-                            <button class="action-btn buy-btn" onclick="handleBuy('${product.id}', '${product.telegram_username || product.user_telegram_id || ''}')">
+                            <button class="action-btn buy-btn" onclick="handleBuy('${product.id}', '${escapeHtml(product.telegram_username || product.user_telegram_id || '')}')">
                                 Купить
                             </button>
-                            <button class="action-btn like-btn" onclick="handleLike('${product.id}')">
+                            <button class="action-btn like-btn ${isLiked ? 'liked' : ''}" 
+                                    onclick="handleLike('${product.id}')" ${isMyProduct ? 'disabled style="opacity:0.5"' : ''}>
                                 <span>❤️</span>
                                 <span>${product.likes_count || 0}</span>
                             </button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+            
+            // Добавляем делегирование для просмотров
+            productsGrid.addEventListener('click', (e) => {
+                const productCard = e.target.closest('.product-card');
+                if (productCard) {
+                    const productId = productCard.dataset.id;
+                    incrementViews(productId);
+                }
+            });
         }
 
         function updateProfileStats() {
@@ -1086,18 +1198,26 @@
             // Мои товары в профиле
             const myProductsGrid = document.getElementById('myProductsGrid');
             if (myProducts.length === 0) {
-                myProductsGrid.innerHTML = '<div style="text-align:center;padding:40px;color:#666;grid-column:1/-1;">У вас нет объявлений</div>';
+                myProductsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>У вас нет объявлений</div>
+                    </div>
+                `;
                 return;
             }
             
             myProductsGrid.innerHTML = myProducts.map(product => `
                 <div class="product-card" data-id="${product.id}">
-                    <div class="product-image" style="background: linear-gradient(45deg, #${product.id?.slice(0,6) || '8A2BE2'}, #${product.id?.slice(6,12) || '5D00A3'});">
-                        ${product.image_url ? `<img src="${product.image_url}" class="product-image" onerror="this.style.display='none'">` : ''}
+                    <div class="product-image-container">
+                        ${product.image_url ? 
+                            `<img src="${product.image_url}" class="product-image" alt="${product.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"product-image-placeholder\">📱</div>';">` : 
+                            `<div class="product-image-placeholder">📱</div>`
+                        }
                     </div>
                     <div class="product-content">
-                        <div class="product-title">${product.title || 'Без названия'}</div>
-                        <div class="product-price">${product.price || 0} ₽</div>
+                        <div class="product-title">${escapeHtml(product.title) || 'Без названия'}</div>
+                        <div class="product-price">${formatPrice(product.price || 0)} ₽</div>
                         
                         <div class="product-stats">
                             <div class="product-stat">
@@ -1115,16 +1235,27 @@
                         </div>
                         
                         <div class="product-actions">
-                            <button class="action-btn buy-btn" onclick="editProduct('${product.id}')">
+                            <button class="action-btn edit-btn" onclick="editProduct('${product.id}')">
                                 Редактировать
                             </button>
-                            <button class="action-btn like-btn" onclick="handleDelete('${product.id}')" style="background:var(--danger);">
+                            <button class="action-btn delete-btn" onclick="handleDelete('${product.id}')">
                                 Удалить
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
+        }
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('ru-RU').format(price);
         }
 
         // ===== ОБРАБОТЧИКИ ДЕЙСТВИЙ =====
@@ -1135,9 +1266,39 @@
             }
             
             try {
-                // Просто увеличиваем счетчик (без сложной логики для простоты)
-                await supabase.rpc('increment_likes', { row_id: productId });
-                showNotification('Лайк добавлен!', 'success');
+                const product = allProducts.find(p => p.id === productId);
+                if (!product) return;
+                
+                // Проверяем, не свой ли это товар
+                if (product.user_telegram_id === currentUser.id) {
+                    showNotification('Нельзя лайкать свой товар', 'warning');
+                    return;
+                }
+                
+                const isLiked = likedProducts.has(productId);
+                
+                if (isLiked) {
+                    // Убираем лайк
+                    likedProducts.delete(productId);
+                    await supabase
+                        .from('mini_app_market')
+                        .update({ likes_count: Math.max(0, (product.likes_count || 0) - 1) })
+                        .eq('id', productId);
+                    
+                    showNotification('Лайк удален', 'success');
+                } else {
+                    // Ставим лайк
+                    likedProducts.add(productId);
+                    await supabase
+                        .from('mini_app_market')
+                        .update({ likes_count: (product.likes_count || 0) + 1 })
+                        .eq('id', productId);
+                    
+                    showNotification('Лайк добавлен!', 'success');
+                }
+                
+                // Сохраняем лайки пользователя
+                localStorage.setItem(`likes_${currentUser.id}`, JSON.stringify([...likedProducts]));
                 
                 // Обновляем данные
                 await loadProducts();
@@ -1148,23 +1309,53 @@
             }
         }
 
+        async function incrementViews(productId) {
+            try {
+                const product = allProducts.find(p => p.id === productId);
+                if (product) {
+                    // Обновляем локально для мгновенного отображения
+                    product.views_count = (product.views_count || 0) + 1;
+                    
+                    // Асинхронно обновляем в базе
+                    supabase
+                        .from('mini_app_market')
+                        .update({ views_count: product.views_count })
+                        .eq('id', productId)
+                        .then(() => {});
+                }
+            } catch (error) {
+                console.error('Ошибка увеличения просмотров:', error);
+            }
+        }
+
         function handleBuy(productId, sellerTelegram) {
             if (!currentUser) {
                 showNotification('Войдите в аккаунт', 'error');
                 return;
             }
             
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+            
             if (sellerTelegram) {
-                const url = `https://t.me/${sellerTelegram.replace('@', '')}`;
+                const telegramUsername = sellerTelegram.replace('@', '');
                 
                 if (window.Telegram && Telegram.WebApp) {
-                    Telegram.WebApp.openTelegramLink(`tg://resolve?domain=${sellerTelegram.replace('@', '')}&start=${productId}`);
+                    Telegram.WebApp.openTelegramLink(`tg://resolve?domain=${telegramUsername}&start=buy_${productId}`);
                 } else {
+                    const message = `Здравствуйте! Я хочу купить ваш товар: "${product.title}" за ${product.price}₽`;
+                    const url = `https://t.me/${telegramUsername}?text=${encodeURIComponent(message)}`;
                     window.open(url, '_blank');
                 }
                 
                 // Увеличиваем счетчик сделок
-                supabase.rpc('increment_deals', { row_id: productId }).catch(console.error);
+                supabase
+                    .from('mini_app_market')
+                    .update({ deals_count: (product.deals_count || 0) + 1 })
+                    .eq('id', productId)
+                    .then(() => {
+                        loadProducts(); // Обновляем данные
+                    });
                     
                 showNotification('Открываю Telegram...', 'success');
             } else {
@@ -1174,6 +1365,7 @@
 
         function editProduct(productId) {
             showNotification('Редактирование в разработке', 'info');
+            // В будущем можно реализовать редактирование
         }
 
         async function handleDelete(productId) {
@@ -1213,6 +1405,7 @@
             
             cancelBtn.addEventListener('click', () => {
                 overlay.classList.remove('active');
+                form.reset();
             });
             
             form.addEventListener('submit', async (e) => {
@@ -1225,19 +1418,31 @@
                 
                 const formData = new FormData(form);
                 const productData = {
-                    title: formData.get('title'),
+                    title: formData.get('title').trim(),
                     category: formData.get('category'),
                     price: parseInt(formData.get('price')) || 0,
-                    description: formData.get('description') || '',
-                    image_url: formData.get('image_url') || null,
+                    description: formData.get('description')?.trim() || '',
+                    image_url: formData.get('image_url')?.trim() || null,
                     user_name: currentUser.name,
                     telegram_username: currentUser.username,
                     user_telegram_id: currentUser.id,
                     is_active: true,
                     likes_count: 0,
                     views_count: 0,
-                    deals_count: 0
+                    deals_count: 0,
+                    created_at: new Date().toISOString()
                 };
+                
+                // Валидация
+                if (productData.price <= 0) {
+                    showNotification('Укажите корректную цену', 'error');
+                    return;
+                }
+                
+                if (productData.price > 1000000) {
+                    showNotification('Цена слишком большая', 'error');
+                    return;
+                }
                 
                 try {
                     const { error } = await supabase
@@ -1261,6 +1466,15 @@
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     overlay.classList.remove('active');
+                    form.reset();
+                }
+            });
+            
+            // Закрытие по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                    overlay.classList.remove('active');
+                    form.reset();
                 }
             });
         }
@@ -1308,6 +1522,8 @@
                 };
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userTelegram').textContent = '@' + currentUser.username;
+                const userAvatar = document.getElementById('userAvatar');
+                userAvatar.textContent = 'T';
             }
             
             // Инициализируем Supabase
@@ -1341,46 +1557,6 @@
             // Запускаем проверку возраста
             initAgeGate();
         });
-
-        // ===== RPC ФУНКЦИИ (нужно добавить в Supabase через SQL Editor) =====
-        // Эти функции нужно создать в Supabase через SQL Editor:
-        /*
-        CREATE OR REPLACE FUNCTION increment_views(row_id uuid)
-        RETURNS void AS $$
-        BEGIN
-            UPDATE mini_app_market 
-            SET views_count = COALESCE(views_count, 0) + 1
-            WHERE id = row_id;
-        END;
-        $$ LANGUAGE plpgsql;
-
-        CREATE OR REPLACE FUNCTION increment_likes(row_id uuid)
-        RETURNS void AS $$
-        BEGIN
-            UPDATE mini_app_market 
-            SET likes_count = COALESCE(likes_count, 0) + 1
-            WHERE id = row_id;
-        END;
-        $$ LANGUAGE plpgsql;
-
-        CREATE OR REPLACE FUNCTION decrement_likes(row_id uuid)
-        RETURNS void AS $$
-        BEGIN
-            UPDATE mini_app_market 
-            SET likes_count = GREATEST(COALESCE(likes_count, 0) - 1, 0)
-            WHERE id = row_id;
-        END;
-        $$ LANGUAGE plpgsql;
-
-        CREATE OR REPLACE FUNCTION increment_deals(row_id uuid)
-        RETURNS void AS $$
-        BEGIN
-            UPDATE mini_app_market 
-            SET deals_count = COALESCE(deals_count, 0) + 1
-            WHERE id = row_id;
-        END;
-        $$ LANGUAGE plpgsql;
-        */
     </script>
 </body>
 </html>
