@@ -6,7 +6,7 @@
 **Ссылка на магазин:** `https://nukm0.github.io/telegram-mini-app`
 
 ## 📱 Как открыть магазин:
-1. **Найдите бота в Telegram:** @Vape_markettyt_bot
+1. **Найдите бота в Telegram:** [@Vape_markettyt_bot](https://t.me/Vape_markettyt_bot)
 2. **Нажмите кнопку** "🛒 VAPE Market"
 3. **Готово!** Магазин откроется внутри Telegram
 
