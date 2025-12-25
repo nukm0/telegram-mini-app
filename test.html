@@ -11,7 +11,7 @@
         
         // Пробуем получить что-то из любой существующей таблицы
         // Если есть таблица 'profiles', 'users', 'todos' и т.д. — укажи её
-        supabase.from('profiles').select('*').limit(1)
+        supabase.from('mini app market').select('*').limit(1)
             .then(({ data, error }) => {
                 const el = document.getElementById('result')
                 if (error) {
