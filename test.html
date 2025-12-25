@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div id="result">Тестируем...</div>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const supabase = window.supabase.createClient(
+            'https://kawspxlxbncaihbnoetc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4'
+        )
+        
+        // Пробуем получить что-то из любой существующей таблицы
+        // Если есть таблица 'profiles', 'users', 'todos' и т.д. — укажи её
+        supabase.from('profiles').select('*').limit(1)
+            .then(({ data, error }) => {
+                const el = document.getElementById('result')
+                if (error) {
+                    el.innerHTML = `<p style="color:red">❌ ${error.message}</p>`
+                } else {
+                    el.innerHTML = `<p style="color:green">✅ Успех! Получено ${data.length} записей</p>`
+                }
+            })
+    </script>
+</body>
+</html>
