@@ -33,7 +33,8 @@
         .age-yes { background: var(--success); color: white; }
         .age-no { background: var(--danger); color: white; }
         
-        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg-dark); }
+        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg-dark); display: none; }
+        .app-container.active { display: block; }
         
         .header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -160,7 +161,7 @@
         </div>
     </div>
 
-    <div class="app-container" id="appContainer" style="display: none;">
+    <div class="app-container" id="appContainer">
         <header class="header">
             <h1>VAPE MARKET</h1>
             <div class="header-subtitle">Покупай и продавай безопасно</div>
@@ -229,6 +230,8 @@
                             <option value="Устройства">Устройства</option>
                             <option value="Жидкости">Жидкости</option>
                             <option value="Pod-системы">Pod-системы</option>
+                            <option value="Одноразовые">Одноразовые</option>
+                            <option value="Расходники">Расходники</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -237,7 +240,7 @@
                     </div>
                     <div class="form-group">
                         <label>Описание</label>
-                        <textarea class="form-textarea" name="description" placeholder="Опишите товар..."></textarea>
+                        <textarea class="form-textarea" name="description" placeholder="Опишите товар..." rows="3"></textarea>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="form-btn cancel-btn" id="cancelAddForm">Отмена</button>
@@ -257,9 +260,7 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <script>
-        // УПРОЩЕННАЯ ВЕРСИЯ БЕЗ ОШИБОК
-        
-        // Конфигурация Supabase
+        // ========== КОНФИГУРАЦИЯ ==========
         const SUPABASE_URL = 'https://kawspxlxbncaihbnoetc.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imthd3NweGx4Ym5jYWloYm5vZXRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDkyMTIsImV4cCI6MjA4MjE4NTIxMn0.ULXwvlG8rl6iMO6MLgG0CbE08flNT-eqethEQgRX0n4';
         
@@ -269,59 +270,74 @@
             name: 'Пользователь',
             username: 'user'
         };
+        let products = [];
         
-        // 1. Проверка возраста
+        // ========== ВОЗРАСТНЫЕ ВОРОТА ==========
         document.addEventListener('DOMContentLoaded', function() {
             const ageGate = document.getElementById('ageGate');
             const appContainer = document.getElementById('appContainer');
             
             if (localStorage.getItem('ageConfirmed')) {
                 ageGate.style.display = 'none';
-                appContainer.style.display = 'block';
+                appContainer.classList.add('active');
                 initApp();
             } else {
                 document.getElementById('ageYes').addEventListener('click', function() {
                     localStorage.setItem('ageConfirmed', 'true');
                     ageGate.style.display = 'none';
-                    appContainer.style.display = 'block';
+                    appContainer.classList.add('active');
                     initApp();
                 });
                 
                 document.getElementById('ageNo').addEventListener('click', function() {
                     alert('Доступ запрещен. Вам должно быть 18 лет.');
+                    if (window.Telegram && Telegram.WebApp) {
+                        Telegram.WebApp.close();
+                    }
                 });
             }
         });
         
-        // 2. Инициализация приложения
+        // ========== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ==========
         async function initApp() {
-            showNotification('Приложение запущено');
+            // Инициализация Telegram WebApp
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                
+                // Получаем данные пользователя из Telegram
+                const user = Telegram.WebApp.initDataUnsafe?.user;
+                if (user) {
+                    currentUser = {
+                        id: user.id.toString(),
+                        name: user.first_name || 'Пользователь',
+                        username: user.username || `user_${user.id}`
+                    };
+                    console.log('Telegram пользователь:', currentUser);
+                }
+            }
             
             // Инициализация Supabase
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log('Supabase подключен');
+                console.log('✅ Supabase подключен');
             } catch (error) {
-                console.error('Ошибка Supabase:', error);
+                console.error('❌ Ошибка Supabase:', error);
                 showNotification('Ошибка подключения к базе данных');
                 return;
             }
             
-            // Настройка навигации
+            // Настройка интерфейса
             setupNavigation();
-            
-            // Настройка формы
             setupForm();
-            
-            // Загрузка данных
             loadCategories();
             loadProducts();
-            
-            // Обновление профиля
             updateProfile();
+            
+            showNotification('Приложение запущено!');
         }
         
-        // 3. Навигация
+        // ========== НАВИГАЦИЯ ==========
         function setupNavigation() {
             const tabs = document.querySelectorAll('.nav-tab');
             const marketTab = document.getElementById('marketTab');
@@ -344,15 +360,15 @@
             });
         }
         
-        // 4. Категории
+        // ========== КАТЕГОРИИ ==========
         function loadCategories() {
             const categories = [
-                { id: 'Все', name: 'Все', count: 0 },
-                { id: 'Устройства', name: 'Устройства', count: 0 },
-                { id: 'Жидкости', name: 'Жидкости', count: 0 },
-                { id: 'Pod-системы', name: 'Pod-системы', count: 0 },
-                { id: 'Одноразовые', name: 'Одноразовые', count: 0 },
-                { id: 'Расходники', name: 'Расходники', count: 0 }
+                { id: 'Все', name: 'Все', icon: '📦' },
+                { id: 'Устройства', name: 'Устройства', icon: '📱' },
+                { id: 'Жидкости', name: 'Жидкости', icon: '💧' },
+                { id: 'Pod-системы', name: 'Pod-системы', icon: '🔋' },
+                { id: 'Одноразовые', name: 'Одноразовые', icon: '🚬' },
+                { id: 'Расходники', name: 'Расходники', icon: '⚙️' }
             ];
             
             const container = document.getElementById('categoriesGrid');
@@ -362,9 +378,9 @@
                 const div = document.createElement('div');
                 div.className = 'category-card';
                 div.innerHTML = `
-                    <div style="font-size: 24px; margin-bottom: 10px;">${getCategoryIcon(cat.id)}</div>
+                    <div style="font-size: 24px; margin-bottom: 10px;">${cat.icon}</div>
                     <div style="font-weight: bold;">${cat.name}</div>
-                    <div style="color: #666; font-size: 12px;" id="cat-count-${cat.id}">0</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;" id="cat-count-${cat.id}">0</div>
                 `;
                 
                 div.addEventListener('click', function() {
@@ -379,19 +395,7 @@
             });
         }
         
-        function getCategoryIcon(categoryId) {
-            const icons = {
-                'Все': '📦',
-                'Устройства': '📱',
-                'Жидкости': '💧',
-                'Pod-системы': '🔋',
-                'Одноразовые': '🚬',
-                'Расходники': '⚙️'
-            };
-            return icons[categoryId] || '📦';
-        }
-        
-        // 5. Товары
+        // ========== ЗАГРУЗКА ТОВАРОВ ==========
         async function loadProducts() {
             const container = document.getElementById('productsGrid');
             container.innerHTML = '<div class="loading">Загрузка товаров...</div>';
@@ -406,7 +410,7 @@
                 
                 if (error) throw error;
                 
-                window.products = data || [];
+                products = data || [];
                 filterProducts('Все');
                 
             } catch (error) {
@@ -415,47 +419,58 @@
             }
         }
         
+        // ========== ФИЛЬТРАЦИЯ ТОВАРОВ ==========
         function filterProducts(category) {
             const container = document.getElementById('productsGrid');
             
-            let filteredProducts = window.products || [];
+            let filteredProducts = products;
             if (category && category !== 'Все') {
-                filteredProducts = filteredProducts.filter(p => p.category === category);
+                filteredProducts = products.filter(p => p.category === category);
             }
             
             if (filteredProducts.length === 0) {
                 container.innerHTML = '<div class="empty-state">Товары не найдены</div>';
+                updateCategoryCounts();
                 return;
             }
             
             container.innerHTML = filteredProducts.map(product => `
                 <div class="product-card">
-                    <div class="product-image">📱</div>
+                    <div class="product-image">${getCategoryIcon(product.category)}</div>
                     <div class="product-content">
                         <div class="product-title">${product.title || 'Без названия'}</div>
                         <div class="product-price">${product.price || 0} ₽</div>
                         <div style="background: rgba(138, 43, 226, 0.2); color: #9B4DFF; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 10px;">
                             ${product.category || 'Без категории'}
                         </div>
-                        <div style="color: #666; font-size: 12px; margin-bottom: 10px;">
+                        <div style="color: var(--text-secondary); font-size: 12px; margin-bottom: 10px;">
                             ${product.user_name || 'Аноним'}
                         </div>
                         <div class="product-actions">
-                            <button class="action-btn buy-btn" onclick="buyProduct('${product.id}', '${product.telegram_username || ''}')">
-                                Купить
+                            <button class="action-btn buy-btn" onclick="contactSeller('${product.telegram_username || product.user_name || ''}', '${product.title}')">
+                                Написать
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
             
-            // Обновляем счетчики категорий
             updateCategoryCounts();
+        }
+        
+        function getCategoryIcon(category) {
+            const icons = {
+                'Устройства': '📱',
+                'Жидкости': '💧',
+                'Pod-системы': '🔋',
+                'Одноразовые': '🚬',
+                'Расходники': '⚙️'
+            };
+            return icons[category] || '📦';
         }
         
         function updateCategoryCounts() {
             const categories = ['Все', 'Устройства', 'Жидкости', 'Pod-системы', 'Одноразовые', 'Расходники'];
-            const products = window.products || [];
             
             categories.forEach(cat => {
                 const countElement = document.getElementById(`cat-count-${cat}`);
@@ -471,13 +486,12 @@
             });
         }
         
-        // 6. Профиль
+        // ========== ПРОФИЛЬ ==========
         function updateProfile() {
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userTelegram').textContent = '@' + currentUser.username;
             
-            const myProducts = (window.products || []).filter(p => p.user_telegram_id === currentUser.id);
-            
+            const myProducts = products.filter(p => p.user_telegram_id === currentUser.id);
             document.getElementById('myProductsCount').textContent = myProducts.length;
             
             const totalViews = myProducts.reduce((sum, p) => sum + (p.views_count || 0), 0);
@@ -495,7 +509,7 @@
             
             myProductsContainer.innerHTML = myProducts.map(product => `
                 <div class="product-card">
-                    <div class="product-image">📱</div>
+                    <div class="product-image">${getCategoryIcon(product.category)}</div>
                     <div class="product-content">
                         <div class="product-title">${product.title}</div>
                         <div class="product-price">${product.price} ₽</div>
@@ -512,7 +526,7 @@
             `).join('');
         }
         
-        // 7. Форма добавления
+        // ========== ФОРМА ДОБАВЛЕНИЯ ==========
         function setupForm() {
             const openBtn = document.getElementById('openAddForm');
             const overlay = document.getElementById('addFormOverlay');
@@ -547,6 +561,11 @@
                     created_at: new Date().toISOString()
                 };
                 
+                const submitBtn = form.querySelector('.submit-btn');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Публикую...';
+                submitBtn.disabled = true;
+                
                 try {
                     const { error } = await supabase
                         .from('mini_app_market')
@@ -554,21 +573,23 @@
                     
                     if (error) throw error;
                     
-                    showNotification('Товар добавлен!');
+                    showNotification('✅ Товар добавлен!');
                     overlay.classList.remove('active');
                     form.reset();
                     
-                    // Перезагружаем товары
+                    // Обновляем данные
                     await loadProducts();
                     updateProfile();
                     
                 } catch (error) {
                     console.error('Ошибка добавления:', error);
-                    showNotification('Ошибка добавления товара');
+                    showNotification('❌ Ошибка добавления товара');
+                } finally {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
                 }
             });
             
-            // Закрытие по клику вне формы
             overlay.addEventListener('click', function(e) {
                 if (e.target === overlay) {
                     overlay.classList.remove('active');
@@ -577,14 +598,22 @@
             });
         }
         
-        // 8. Действия с товарами
-        function buyProduct(productId, telegramUsername) {
-            if (telegramUsername) {
-                const url = `https://t.me/${telegramUsername.replace('@', '')}`;
-                window.open(url, '_blank');
-                showNotification('Открываю Telegram...');
+        // ========== ДЕЙСТВИЯ С ТОВАРАМИ ==========
+        function contactSeller(username, productTitle) {
+            if (username) {
+                const cleanUsername = username.replace('@', '');
+                const message = encodeURIComponent(`Здравствуйте! Интересует товар: "${productTitle}"`);
+                
+                // Пробуем открыть в Telegram WebApp
+                if (window.Telegram && Telegram.WebApp) {
+                    Telegram.WebApp.openTelegramLink(`https://t.me/${cleanUsername}?text=${message}`);
+                } else {
+                    // Для браузера
+                    window.open(`https://t.me/${cleanUsername}?text=${message}`, '_blank');
+                }
+                showNotification('Открываю чат...');
             } else {
-                showNotification('Продавец не указал контакты');
+                showNotification('❌ Контакты продавца не указаны');
             }
         }
         
@@ -599,21 +628,21 @@
                 
                 if (error) throw error;
                 
-                showNotification('Объявление удалено');
+                showNotification('✅ Объявление удалено');
                 await loadProducts();
                 updateProfile();
                 
             } catch (error) {
                 console.error('Ошибка удаления:', error);
-                showNotification('Ошибка удаления');
+                showNotification('❌ Ошибка удаления');
             }
         }
         
         function editProduct(productId) {
-            showNotification('Редактирование в разработке');
+            showNotification('✏️ Редактирование в разработке');
         }
         
-        // 9. Уведомления
+        // ========== УВЕДОМЛЕНИЯ ==========
         function showNotification(message) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
