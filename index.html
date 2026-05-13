@@ -1,1 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vape Market | Барахолка для вейпов</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase скрипты -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Наши стили -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Шапка -->
+        <div class="app-header">
+            <div class="logo">
+                <i class="fas fa-vape"></i>
+                <span>Vape Market</span>
+            </div>
+        </div>
 
+        <!-- Контент -->
+        <div class="main-content">
+            <!-- Страница Главная (лента объявлений) -->
+            <div id="homePage" class="page active">
+                <!-- Здесь будет динамически подгружаться контент -->
+            </div>
+
+            <!-- Страница Личный кабинет -->
+            <div id="profilePage" class="page">
+                <!-- Динамический контент профиля -->
+            </div>
+
+            <!-- Страница FAQ -->
+            <div id="faqPage" class="page">
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Как создать объявление?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer" style="display: none;">
+                            Нажмите на кнопку "+" внизу экрана, заполните форму и опубликуйте объявление.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Как связаться с продавцом?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer" style="display: none;">
+                            Нажмите кнопку "Написать продавцу" на карточке товара.
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            Как пожаловаться на объявление?
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer" style="display: none;">
+                            В карточке объявления нажмите кнопку "Пожаловаться".
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница Админ-панель -->
+            <div id="adminPage" class="page">
+                <!-- Динамический контент админки -->
+            </div>
+        </div>
+
+        <!-- Нижнее меню навигации -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-page="home">
+                <i class="fas fa-home nav-icon"></i>
+                <span class="nav-label">Главная</span>
+            </button>
+            <button class="nav-item" data-page="profile">
+                <i class="fas fa-user nav-icon"></i>
+                <span class="nav-label">Профиль</span>
+            </button>
+            <button class="nav-item" data-page="faq">
+                <i class="fas fa-question-circle nav-icon"></i>
+                <span class="nav-label">FAQ</span>
+            </button>
+            <button class="nav-item admin-only" data-page="admin" style="display: none;">
+                <i class="fas fa-shield-alt nav-icon"></i>
+                <span class="nav-label">Админ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для фото -->
+    <div id="photoModal" class="photo-modal">
+        <div class="photo-modal-close">&times;</div>
+        <img class="photo-modal-img" alt="Просмотр фото">
+        <div class="photo-modal-counter"></div>
+        <div class="photo-modal-nav">
+            <button class="photo-modal-nav-btn prev">&lt;</button>
+            <button class="photo-modal-nav-btn next">&gt;</button>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="js/supabase.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/ads.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
