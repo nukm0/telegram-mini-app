@@ -2,20 +2,46 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Vape Market | Барахолка для вейпов</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase скрипты -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
+    
     <!-- Наши стили -->
     <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        /* Дополнительные стили для бейджа админа (если нет в styles.css) */
+        .admin-badge {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .admin-badge.show {
+            display: flex;
+        }
+        .admin-badge i {
+            font-size: 12px;
+        }
+        .app-header {
+            position: relative;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Шапка -->
+        <!-- Шапка с бейджем администратора -->
         <div class="app-header">
             <div class="logo">
                 <i class="fas fa-vape"></i>
@@ -105,12 +131,12 @@
         <img class="photo-modal-img" alt="Просмотр фото">
         <div class="photo-modal-counter"></div>
         <div class="photo-modal-nav">
-            <button class="photo-modal-nav-btn prev"><</button>
-            <button class="photo-modal-nav-btn next">></button>
+            <button class="photo-modal-nav-btn prev">‹</button>
+            <button class="photo-modal-nav-btn next">›</button>
         </div>
     </div>
 
-    <!-- Скрипты -->
+    <!-- Скрипты (ваши существующие файлы) -->
     <script src="js/supabase.js"></script>
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
@@ -118,5 +144,70 @@
     <script src="js/profile.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
+    
+    <script>
+        // Дополнительная инициализация для фото (фикс проблемы с отображением)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Функция для открытия галереи (если не определена в ui.js)
+            if (typeof window.openPhotoGallery !== 'function') {
+                window.openPhotoGallery = function(photos, currentIndex) {
+                    const modal = document.getElementById('photoModal');
+                    const img = modal.querySelector('.photo-modal-img');
+                    const counter = modal.querySelector('.photo-modal-counter');
+                    const prevBtn = modal.querySelector('.prev');
+                    const nextBtn = modal.querySelector('.next');
+                    
+                    window.currentGalleryPhotos = photos;
+                    window.currentGalleryIndex = currentIndex;
+                    
+                    function updatePhoto() {
+                        img.src = window.currentGalleryPhotos[window.currentGalleryIndex];
+                        counter.textContent = `${window.currentGalleryIndex + 1} / ${window.currentGalleryPhotos.length}`;
+                    }
+                    
+                    updatePhoto();
+                    modal.classList.add('active');
+                    
+                    // Навигация
+                    const newPrev = prevBtn.cloneNode(true);
+                    const newNext = nextBtn.cloneNode(true);
+                    prevBtn.parentNode.replaceChild(newPrev, prevBtn);
+                    nextBtn.parentNode.replaceChild(newNext, nextBtn);
+                    
+                    newPrev.onclick = function(e) {
+                        e.stopPropagation();
+                        if (window.currentGalleryIndex > 0) {
+                            window.currentGalleryIndex--;
+                            updatePhoto();
+                        }
+                    };
+                    
+                    newNext.onclick = function(e) {
+                        e.stopPropagation();
+                        if (window.currentGalleryIndex < window.currentGalleryPhotos.length - 1) {
+                            window.currentGalleryIndex++;
+                            updatePhoto();
+                        }
+                    };
+                };
+            }
+            
+            // Закрытие галереи
+            const modal = document.getElementById('photoModal');
+            const closeBtn = document.querySelector('.photo-modal-close');
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.classList.remove('active');
+                };
+            }
+            if (modal) {
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                };
+            }
+        });
+    </script>
 </body>
 </html>
