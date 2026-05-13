@@ -7,6 +7,7 @@ window.viewHistory = [];
 window.userAds = [];
 window.complaints = [];
 window.bannerText = 'Добро пожаловать в Vape Market!';
+window.selectedPhotos = []; // Добавлено для хранения фото
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {
@@ -17,17 +18,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const webApp = window.Telegram.WebApp;
         webApp.expand();
         window.user = webApp.initDataUnsafe?.user || {
-            id: Date.now(),
-            first_name: 'Гость',
-            username: 'guest'
+            id: 998579758,  // Ваш ID по умолчанию
+            first_name: '𓆩nukm0𓆪',
+            username: 'nukm0',
+            language_code: 'ru'
         };
     } else {
+        // Данные для тестирования вне Telegram
         window.user = {
-            id: Date.now(),
-            first_name: 'Гость',
-            username: 'guest'
+            id: 998579758,
+            first_name: '𓆩nukm0𓆪',
+            username: 'nukm0',
+            language_code: 'ru'
         };
     }
+    
+    console.log('👤 Пользователь:', window.user);
     
     // Загружаем данные
     await loadAllData();
@@ -56,8 +62,12 @@ async function loadAllData() {
 
 // Загрузка рейтинга пользователя
 async function loadUserRating() {
-    // Здесь должна быть логика загрузки из БД
-    window.userRating = { likes: 0, dislikes: 0 };
+    const saved = localStorage.getItem(`userRating_${window.user.id}`);
+    if (saved) {
+        window.userRating = JSON.parse(saved);
+    } else {
+        window.userRating = { likes: 0, dislikes: 0 };
+    }
 }
 
 // Загрузка истории просмотров
@@ -98,12 +108,30 @@ async function loadBanner() {
     }
 }
 
-// Проверка админа
+// Проверка админа - ВАШ ID ДОБАВЛЕН!
 function checkAdmin() {
-    const adminIds = [123456789, 987654321]; // ID админов
-    if (adminIds.includes(window.user.id)) {
-        document.querySelector('.admin-only').style.display = 'flex';
-        document.querySelector('.admin-badge').classList.add('show');
+    // Список ID администраторов
+    const adminIds = [998579758, 123456789, 987654321];
+    
+    const isAdmin = adminIds.includes(Number(window.user.id));
+    
+    console.log('🔐 Проверка админа:', {
+        userId: window.user.id,
+        isAdmin: isAdmin,
+        adminList: adminIds
+    });
+    
+    if (isAdmin) {
+        const adminNav = document.querySelector('.admin-only');
+        const adminBadge = document.querySelector('.admin-badge');
+        
+        if (adminNav) adminNav.style.display = 'flex';
+        if (adminBadge) adminBadge.classList.add('show');
+        
+        console.log('✅ Админ-панель активирована для пользователя:', window.user.first_name);
+        showNotification('Вы вошли как администратор!', 'success');
+    } else {
+        console.log('👤 Обычный пользователь');
     }
 }
 
@@ -143,7 +171,11 @@ function switchPage(page) {
     });
     
     // Показываем нужную
-    document.getElementById(`${page}Page`).classList.add('active');
+    const pageId = `${page}Page`;
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
     
     // Обновляем активный пункт меню
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -159,6 +191,8 @@ function switchPage(page) {
     } else if (page === 'profile') {
         renderProfile();
     } else if (page === 'admin') {
-        renderAdminPanel();
+        if (typeof renderAdminPanel === 'function') {
+            renderAdminPanel();
+        }
     }
 }
