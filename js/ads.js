@@ -1,24 +1,38 @@
 // Загрузка объявлений
 async function loadAds() {
-    // Загружаем из Firebase или localStorage
+    // Загружаем из localStorage
     const saved = localStorage.getItem('ads');
     if (saved) {
         window.ads = JSON.parse(saved);
     } else {
-        // Демо данные
+        // Демо данные с тестовыми фото
         window.ads = [
             {
                 id: 1,
-                title: 'Pod System',
+                title: 'Pod System Voopoo',
                 price: 2500,
                 category: 'pod',
-                description: 'Отличный под систем, в отличном состоянии',
-                photos: [],
-                sellerId: 123456,
-                sellerName: 'Алексей',
-                sellerUsername: 'alex',
+                description: 'Отличный под систем, в отличном состоянии. Полный комплект.',
+                photos: ['https://via.placeholder.com/120x120?text=Photo+1', 'https://via.placeholder.com/120x120?text=Photo+2'],
+                sellerId: 998579758,
+                sellerName: '𓆩nukm0𓆪',
+                sellerUsername: 'nukm0',
                 likes: 5,
                 dislikes: 1,
+                date: new Date().toISOString()
+            },
+            {
+                id: 2,
+                title: 'Жидкость Havana 30mg',
+                price: 450,
+                category: 'liquid',
+                description: 'Новая, вкусная жидкость. Крепость 30mg.',
+                photos: ['https://via.placeholder.com/120x120?text=Liquid'],
+                sellerId: 998579758,
+                sellerName: '𓆩nukm0𓆪',
+                sellerUsername: 'nukm0',
+                likes: 3,
+                dislikes: 0,
                 date: new Date().toISOString()
             }
         ];
@@ -35,6 +49,7 @@ function saveAds() {
 // Отображение объявлений
 function renderAds() {
     const homePage = document.getElementById('homePage');
+    if (!homePage) return;
     
     // Фильтрация по категории
     let filteredAds = window.ads;
@@ -49,7 +64,7 @@ function renderAds() {
                 <div class="add-ad-title">
                     <i class="fas fa-plus-circle"></i> Добавить объявление
                 </div>
-                <button class="toggle-form-btn" onclick="toggleAdForm()">
+                <button class="toggle-form-btn" onclick="window.toggleAdForm()">
                     <i class="fas fa-plus"></i> Новое
                 </button>
             </div>
@@ -67,35 +82,35 @@ function renderAds() {
                 <div class="photo-upload-section">
                     <div class="uploaded-photos-container" id="uploadedPhotos"></div>
                     <input type="file" id="photoInput" class="hidden-file-input" accept="image/*" multiple>
-                    <button class="upload-btn" onclick="document.getElementById('photoInput').click()">
+                    <button class="upload-btn" type="button" onclick="document.getElementById('photoInput').click()">
                         <i class="fas fa-camera"></i> Загрузить фото
                     </button>
                     <div class="upload-info">Можно загрузить до 5 фото</div>
                 </div>
                 
                 <div class="form-buttons">
-                    <button class="publish-btn" onclick="publishAd()">Опубликовать</button>
-                    <button class="cancel-btn" onclick="toggleAdForm()">Отмена</button>
+                    <button class="publish-btn" type="button" onclick="window.publishAd()">Опубликовать</button>
+                    <button class="cancel-btn" type="button" onclick="window.toggleAdForm()">Отмена</button>
                 </div>
             </div>
         </div>
         
         <div class="categories">
-            <button class="category-btn ${window.currentCategory === 'all' ? 'active' : ''}" onclick="filterAds('all')">Все</button>
-            <button class="category-btn ${window.currentCategory === 'pod' ? 'active' : ''}" onclick="filterAds('pod')">Под системы</button>
-            <button class="category-btn ${window.currentCategory === 'liquid' ? 'active' : ''}" onclick="filterAds('liquid')">Жидкости</button>
-            <button class="category-btn ${window.currentCategory === 'mod' ? 'active' : ''}" onclick="filterAds('mod')">Моды</button>
-            <button class="category-btn ${window.currentCategory === 'accessory' ? 'active' : ''}" onclick="filterAds('accessory')">Аксессуары</button>
+            <button class="category-btn ${window.currentCategory === 'all' ? 'active' : ''}" onclick="window.filterAds('all')">Все</button>
+            <button class="category-btn ${window.currentCategory === 'pod' ? 'active' : ''}" onclick="window.filterAds('pod')">Под системы</button>
+            <button class="category-btn ${window.currentCategory === 'liquid' ? 'active' : ''}" onclick="window.filterAds('liquid')">Жидкости</button>
+            <button class="category-btn ${window.currentCategory === 'mod' ? 'active' : ''}" onclick="window.filterAds('mod')">Моды</button>
+            <button class="category-btn ${window.currentCategory === 'accessory' ? 'active' : ''}" onclick="window.filterAds('accessory')">Аксессуары</button>
         </div>
         
         <div id="adsList">
     `;
     
     if (filteredAds.length === 0) {
-        html += '<div style="text-align: center; padding: 40px;">Нет объявлений</div>';
+        html += '<div style="text-align: center; padding: 40px;">😕 Нет объявлений</div>';
     } else {
         filteredAds.forEach(ad => {
-            html += renderAdCard(ad);
+            html += window.renderAdCard(ad);
         });
     }
     
@@ -104,8 +119,9 @@ function renderAds() {
 }
 
 // Рендер карточки объявления
-function renderAdCard(ad) {
-    const userVote = getUserVote(ad.id);
+window.renderAdCard = function(ad) {
+    const userVote = window.getUserVote(ad.id);
+    const isOwner = ad.sellerId === window.user.id;
     
     return `
         <div class="advertisement-card" data-ad-id="${ad.id}">
@@ -114,7 +130,7 @@ function renderAdCard(ad) {
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="seller-info">
-                    <div class="seller-name">${ad.sellerName || 'Продавец'}</div>
+                    <div class="seller-name">${window.escapeHtml(ad.sellerName || 'Продавец')}</div>
                     <div class="seller-username">@${ad.sellerUsername || 'user'}</div>
                     <div class="seller-stats">
                         <span class="seller-stat stat-likes"><i class="fas fa-thumbs-up"></i> ${ad.likes || 0}</span>
@@ -124,48 +140,48 @@ function renderAdCard(ad) {
             </div>
             
             <div class="photo-gallery">
-                ${renderPhotos(ad.photos)}
+                ${window.renderPhotos(ad.photos)}
             </div>
             
             <div class="product-info">
-                <div class="product-title">${ad.title}</div>
-                <div class="product-category">${getCategoryName(ad.category)}</div>
-                <div class="product-price">${ad.price} ₽</div>
-                <div class="product-description">${ad.description}</div>
+                <div class="product-title">${window.escapeHtml(ad.title)}</div>
+                <div class="product-category">${window.getCategoryName(ad.category)}</div>
+                <div class="product-price">${ad.price.toLocaleString()} ₽</div>
+                <div class="product-description">${window.escapeHtml(ad.description)}</div>
             </div>
             
             <div class="action-grid">
-                <button class="rate-btn like-btn ${userVote === 'like' ? 'active' : ''}" onclick="rateAd(${ad.id}, 'like')">
+                <button class="rate-btn like-btn ${userVote === 'like' ? 'active' : ''}" onclick="window.rateAd(${ad.id}, 'like')">
                     <i class="fas fa-thumbs-up"></i>
                 </button>
-                <button class="rate-btn dislike-btn ${userVote === 'dislike' ? 'active' : ''}" onclick="rateAd(${ad.id}, 'dislike')">
+                <button class="rate-btn dislike-btn ${userVote === 'dislike' ? 'active' : ''}" onclick="window.rateAd(${ad.id}, 'dislike')">
                     <i class="fas fa-thumbs-down"></i>
                 </button>
-                <button class="contact-btn" onclick="contactSeller(${ad.id})">
+                <button class="contact-btn" onclick="window.contactSeller(${ad.id})">
                     <i class="fab fa-telegram"></i> Написать продавцу
                 </button>
             </div>
             
-            ${ad.sellerId !== window.user.id ? `
-                <button class="complaint-btn" onclick="reportAd(${ad.id})">
+            ${!isOwner ? `
+                <button class="complaint-btn" onclick="window.reportAd(${ad.id})">
                     <i class="fas fa-flag"></i> Пожаловаться
                 </button>
             ` : `
                 <div class="my-ad-actions" style="margin-top: 15px;">
-                    <button class="edit-ad-btn" onclick="editAd(${ad.id})">
+                    <button class="edit-ad-btn" onclick="window.editAd(${ad.id})">
                         <i class="fas fa-edit"></i> Редактировать
                     </button>
-                    <button class="delete-ad-btn" onclick="deleteAd(${ad.id})">
+                    <button class="delete-ad-btn" onclick="window.deleteAd(${ad.id})">
                         <i class="fas fa-trash"></i> Удалить
                     </button>
                 </div>
             `}
         </div>
     `;
-}
+};
 
-// Рендер фото
-function renderPhotos(photos) {
+// Рендер фото - ИСПРАВЛЕНО!
+window.renderPhotos = function(photos) {
     if (!photos || photos.length === 0) {
         return `
             <div class="photo-item">
@@ -177,16 +193,30 @@ function renderPhotos(photos) {
         `;
     }
     
-    return photos.map((photo, index) => `
-        <div class="photo-item" onclick="openPhotoGallery(${JSON.stringify(photos)}, ${index})">
-            <img src="${photo}" alt="Фото товара">
-            ${photos.length > 1 ? `<div class="photo-label">${index + 1}/${photos.length}</div>` : ''}
+    // Проверяем, что photos - это массив
+    const photoArray = Array.isArray(photos) ? photos : [];
+    
+    if (photoArray.length === 0) {
+        return `
+            <div class="photo-item">
+                <div class="photo-placeholder">
+                    <i class="fas fa-image"></i>
+                    <span>Нет фото</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    return photoArray.map((photo, index) => `
+        <div class="photo-item" onclick="window.openPhotoGallery(${JSON.stringify(photoArray)}, ${index})">
+            <img src="${photo}" alt="Фото товара" onerror="this.src='https://via.placeholder.com/120x120?text=No+Image'">
+            ${photoArray.length > 1 ? `<div class="photo-label">${index + 1}/${photoArray.length}</div>` : ''}
         </div>
     `).join('');
-}
+};
 
 // Получить название категории
-function getCategoryName(category) {
+window.getCategoryName = function(category) {
     const categories = {
         'pod': 'Под система',
         'liquid': 'Жидкость',
@@ -194,49 +224,51 @@ function getCategoryName(category) {
         'accessory': 'Аксессуар'
     };
     return categories[category] || category;
-}
+};
 
 // Получить голос пользователя
-function getUserVote(adId) {
+window.getUserVote = function(adId) {
     const votes = JSON.parse(localStorage.getItem(`votes_${window.user.id}`) || '{}');
     return votes[adId];
-}
+};
 
 // Фильтрация объявлений
-function filterAds(category) {
+window.filterAds = function(category) {
     window.currentCategory = category;
-    renderAds();
-}
+    window.renderAds();
+};
 
 // Переключение формы добавления
-function toggleAdForm() {
+window.toggleAdForm = function() {
     const form = document.getElementById('addAdForm');
-    if (form.classList.contains('active')) {
-        form.classList.remove('active');
-    } else {
-        form.classList.add('active');
+    if (form) {
+        if (form.classList.contains('active')) {
+            form.classList.remove('active');
+        } else {
+            form.classList.add('active');
+        }
     }
-}
+};
 
 // Публикация объявления
-async function publishAd() {
-    const title = document.getElementById('adTitle').value;
-    const price = document.getElementById('adPrice').value;
-    const category = document.getElementById('adCategory').value;
-    const description = document.getElementById('adDescription').value;
+window.publishAd = function() {
+    const title = document.getElementById('adTitle')?.value;
+    const price = document.getElementById('adPrice')?.value;
+    const category = document.getElementById('adCategory')?.value;
+    const description = document.getElementById('adDescription')?.value;
     
     if (!title || !price || !description) {
-        showNotification('Заполните все поля!', 'error');
+        window.showNotification('Заполните все поля!', 'error');
         return;
     }
     
     const newAd = {
         id: Date.now(),
-        title,
+        title: title,
         price: parseInt(price),
-        category,
-        description,
-        photos: window.selectedPhotos || [],
+        category: category,
+        description: description,
+        photos: window.selectedPhotos && window.selectedPhotos.length > 0 ? [...window.selectedPhotos] : ['https://via.placeholder.com/120x120?text=No+Photo'],
         sellerId: window.user.id,
         sellerName: window.user.first_name,
         sellerUsername: window.user.username || 'user',
@@ -246,23 +278,30 @@ async function publishAd() {
     };
     
     window.ads.unshift(newAd);
-    saveAds();
+    window.saveAds();
     
     // Сохраняем в объявления пользователя
-    window.userAds.unshift(newAd.id);
+    if (!window.userAds.includes(newAd.id)) {
+        window.userAds.unshift(newAd.id);
+    }
     localStorage.setItem(`userAds_${window.user.id}`, JSON.stringify(window.userAds));
     
-    showNotification('Объявление опубликовано!', 'success');
-    toggleAdForm();
-    renderAds();
+    window.showNotification('Объявление опубликовано!', 'success');
+    window.toggleAdForm();
+    window.renderAds();
     
     // Очищаем форму
-    document.getElementById('adTitle').value = '';
-    document.getElementById('adPrice').value = '';
-    document.getElementById('adDescription').value = '';
+    const adTitle = document.getElementById('adTitle');
+    const adPrice = document.getElementById('adPrice');
+    const adDescription = document.getElementById('adDescription');
+    if (adTitle) adTitle.value = '';
+    if (adPrice) adPrice.value = '';
+    if (adDescription) adDescription.value = '';
+    
     window.selectedPhotos = [];
-    document.getElementById('uploadedPhotos').innerHTML = '';
-}
+    const uploadedPhotos = document.getElementById('uploadedPhotos');
+    if (uploadedPhotos) uploadedPhotos.innerHTML = '';
+};
 
 // Загрузка фото
 document.addEventListener('DOMContentLoaded', () => {
@@ -276,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     window.selectedPhotos.push(event.target.result);
-                    displayUploadedPhotos();
+                    window.displayUploadedPhotos();
                 };
                 reader.readAsDataURL(file);
             });
@@ -285,26 +324,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Отображение загруженных фото
-function displayUploadedPhotos() {
+window.displayUploadedPhotos = function() {
     const container = document.getElementById('uploadedPhotos');
     if (!container) return;
     
-    container.innerHTML = window.selectedPhotos.map((photo, index) => `
+    const photos = window.selectedPhotos || [];
+    
+    if (photos.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = photos.map((photo, index) => `
         <div class="uploaded-photo-item">
             <img src="${photo}" alt="Загруженное фото">
-            <button class="remove-photo-btn" onclick="removePhoto(${index})">×</button>
+            <button class="remove-photo-btn" onclick="window.removePhoto(${index})">×</button>
         </div>
     `).join('');
-}
+};
 
 // Удаление фото
-function removePhoto(index) {
+window.removePhoto = function(index) {
     window.selectedPhotos.splice(index, 1);
-    displayUploadedPhotos();
-}
+    window.displayUploadedPhotos();
+};
 
 // Голосование за объявление
-function rateAd(adId, type) {
+window.rateAd = function(adId, type) {
     const ad = window.ads.find(a => a.id === adId);
     if (!ad) return;
     
@@ -333,92 +379,115 @@ function rateAd(adId, type) {
     }
     
     localStorage.setItem(`votes_${window.user.id}`, JSON.stringify(votes));
-    saveAds();
-    renderAds();
-    showNotification('Оценка обновлена!', 'success');
-}
+    window.saveAds();
+    window.renderAds();
+    window.showNotification('Оценка обновлена!', 'success');
+};
 
 // Связь с продавцом
-function contactSeller(adId) {
+window.contactSeller = function(adId) {
     const ad = window.ads.find(a => a.id === adId);
     if (ad && ad.sellerUsername) {
         window.open(`https://t.me/${ad.sellerUsername}`, '_blank');
     } else {
-        showNotification('Не удалось связаться с продавцом', 'error');
+        window.showNotification('Не удалось связаться с продавцом', 'error');
     }
-}
+};
 
 // Жалоба на объявление
-function reportAd(adId) {
+window.reportAd = function(adId) {
     const reason = prompt('Укажите причину жалобы:');
     if (reason) {
         window.complaints.push({
             id: Date.now(),
-            adId,
+            adId: adId,
             reporterId: window.user.id,
-            reason,
+            reason: reason,
             status: 'new',
             date: new Date().toISOString()
         });
         localStorage.setItem('complaints', JSON.stringify(window.complaints));
-        showNotification('Жалоба отправлена модератору', 'success');
+        window.showNotification('Жалоба отправлена модератору', 'success');
     }
-}
+};
 
 // Редактирование объявления
-function editAd(adId) {
+window.editAd = function(adId) {
     const ad = window.ads.find(a => a.id === adId);
     if (!ad || ad.sellerId !== window.user.id) return;
     
     // Заполняем форму
-    document.getElementById('adTitle').value = ad.title;
-    document.getElementById('adPrice').value = ad.price;
-    document.getElementById('adCategory').value = ad.category;
-    document.getElementById('adDescription').value = ad.description;
-    window.selectedPhotos = ad.photos || [];
-    displayUploadedPhotos();
+    const titleInput = document.getElementById('adTitle');
+    const priceInput = document.getElementById('adPrice');
+    const categorySelect = document.getElementById('adCategory');
+    const descTextarea = document.getElementById('adDescription');
+    
+    if (titleInput) titleInput.value = ad.title;
+    if (priceInput) priceInput.value = ad.price;
+    if (categorySelect) categorySelect.value = ad.category;
+    if (descTextarea) descTextarea.value = ad.description;
+    
+    window.selectedPhotos = ad.photos && ad.photos.length > 0 ? [...ad.photos] : [];
+    window.displayUploadedPhotos();
     
     // Показываем форму
-    toggleAdForm();
+    window.toggleAdForm();
     
     // Меняем кнопку публикации
     const publishBtn = document.querySelector('.publish-btn');
-    const oldClick = publishBtn.onclick;
-    publishBtn.onclick = () => updateAd(adId);
-}
+    if (publishBtn) {
+        publishBtn.textContent = 'Обновить';
+        publishBtn.onclick = () => window.updateAd(adId);
+    }
+};
 
 // Обновление объявления
-function updateAd(adId) {
-    const title = document.getElementById('adTitle').value;
-    const price = document.getElementById('adPrice').value;
-    const category = document.getElementById('adCategory').value;
-    const description = document.getElementById('adDescription').value;
+window.updateAd = function(adId) {
+    const title = document.getElementById('adTitle')?.value;
+    const price = document.getElementById('adPrice')?.value;
+    const category = document.getElementById('adCategory')?.value;
+    const description = document.getElementById('adDescription')?.value;
     
     const index = window.ads.findIndex(a => a.id === adId);
     if (index !== -1) {
         window.ads[index] = {
             ...window.ads[index],
-            title,
+            title: title,
             price: parseInt(price),
-            category,
-            description,
-            photos: window.selectedPhotos || []
+            category: category,
+            description: description,
+            photos: window.selectedPhotos && window.selectedPhotos.length > 0 ? [...window.selectedPhotos] : ['https://via.placeholder.com/120x120?text=No+Photo']
         };
-        saveAds();
-        showNotification('Объявление обновлено!', 'success');
-        toggleAdForm();
-        renderAds();
+        window.saveAds();
+        window.showNotification('Объявление обновлено!', 'success');
+        window.toggleAdForm();
+        window.renderAds();
+        
+        // Восстанавливаем кнопку
+        const publishBtn = document.querySelector('.publish-btn');
+        if (publishBtn) {
+            publishBtn.textContent = 'Опубликовать';
+            publishBtn.onclick = () => window.publishAd();
+        }
     }
-}
+};
 
 // Удаление объявления
-function deleteAd(adId) {
+window.deleteAd = function(adId) {
     if (confirm('Вы уверены, что хотите удалить это объявление?')) {
         window.ads = window.ads.filter(ad => ad.id !== adId);
         window.userAds = window.userAds.filter(id => id !== adId);
         localStorage.setItem(`userAds_${window.user.id}`, JSON.stringify(window.userAds));
-        saveAds();
-        renderAds();
-        showNotification('Объявление удалено', 'success');
+        window.saveAds();
+        window.renderAds();
+        window.showNotification('Объявление удалено', 'success');
     }
-}
+};
+
+// Экранирование HTML
+window.escapeHtml = function(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+};
